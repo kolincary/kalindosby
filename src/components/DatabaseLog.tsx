@@ -1633,13 +1633,6 @@ export function DatabaseLog() {
 
       {isAccessGranted ? (
         <div className="space-y-6">
-          <Toast
-            isOpen={toast.show}
-            message={toast.message}
-            type={toast.type}
-            onClose={hideToast}
-          />
-
           {/* PREMIUM IMMERSIVE HEADER (310px) */}
           <div className="flex flex-col mb-8 lg:mb-12 uppercase">
             <div className="bg-gradient-to-br from-blue-700 via-indigo-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-blue-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
@@ -1694,7 +1687,7 @@ export function DatabaseLog() {
                       >
                         <ArrowUpDown className="h-4 w-4" />
                         <span className="uppercase text-[10px] font-black">
-                         {isMigrating ? 'Fixing...' : 'Fix Date'}
+                          {isMigrating ? 'Fixing...' : 'Fix Date'}
                         </span>
                       </button>
                       <button
@@ -1740,1195 +1733,1195 @@ export function DatabaseLog() {
 
           <div className="lg:px-10 pb-12 -mt-6 lg:-mt-8">
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="text-yellow-800">
-                <strong className="text-base">Database memiliki {totalCount.toLocaleString()} data log.</strong>
-                <p className="text-xs sm:text-sm mt-1">Gunakan filter untuk memuat data yang spesifik, atau klik tombol di bawah untuk memuat data terbaru.</p>
-              </div>
-              <Button
-                onClick={handleLoadData}
-                disabled={loading}
-                className="w-full sm:w-auto h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50 shrink-0"
-              >
-                <span className="tracking-wide uppercase text-sm">
-                  {loading ? 'Memuat...' : 'Muat Data'}
-                </span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">SKU</span>
-              </div>
-              <FilterDropdown
-                value={filters.sku}
-                onChange={(value) => setFilters({ ...filters, sku: value })}
-                options={allSkus}
-                placeholder="Cari SKU..."
-                loading={dropdownsLoading}
-              />
-            </div>
-
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">Type</span>
-              </div>
-              <select
-                value={filters.type}
-                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">Semua Type</option>
-                <option value="IN">IN</option>
-                <option value="OUT">OUT</option>
-                <option value="MOVE">MOVE</option>
-              </select>
-            </div>
-
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">Gudang</span>
-              </div>
-              <FilterDropdown
-                value={filters.gudang}
-                onChange={(value) => setFilters({ ...filters, gudang: value })}
-                options={allGudangs}
-                placeholder="Cari gudang..."
-                loading={dropdownsLoading}
-              />
-            </div>
-
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">Rak</span>
-              </div>
-              <FilterDropdown
-                value={filters.rak}
-                onChange={(value) => setFilters({ ...filters, rak: value })}
-                options={allRaks}
-                placeholder="Cari rak..."
-                loading={dropdownsLoading}
-              />
-            </div>
-
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">Tanggal</span>
-              </div>
-              <div className="relative" onClick={() => tanggalInputRef.current?.showPicker()}>
-                <input
-                  type="text"
-                  value={filters.tanggal}
-                  onChange={(e) => setFilters({ ...filters, tanggal: e.target.value })}
-                  placeholder="dd/mm/yyyy"
-                  className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 cursor-pointer"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenManualFilter('tanggal');
-                    }}
-                    className="p-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-md transition-all border border-blue-200 shadow-sm"
-                    title="Input Manual"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </button>
-                  {filters.tanggal ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFilters({ ...filters, tanggal: '' });
-                        if (tanggalInputRef.current) tanggalInputRef.current.value = '';
-                      }}
-                      className="p-1 px-1.5 bg-gray-100/50 hover:bg-gray-200 text-gray-500 hover:text-gray-700 rounded-md transition-all backdrop-blur-sm border border-gray-200"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <Calendar className="h-4 w-4 text-gray-400 pointer-events-none" />
-                  )}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="text-yellow-800">
+                  <strong className="text-base">Database memiliki {totalCount.toLocaleString()} data log.</strong>
+                  <p className="text-xs sm:text-sm mt-1">Gunakan filter untuk memuat data yang spesifik, atau klik tombol di bawah untuk memuat data terbaru.</p>
                 </div>
-                <input
-                  ref={tanggalInputRef}
-                  type="date"
-                  value={normalizeFilterDate(filters.tanggal)} // Bind value so it clears when state clears
-                  className="absolute bottom-0 left-0 w-0 h-0 opacity-0"
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val) {
-                      setFilters({ ...filters, tanggal: val });
-                    } else {
-                      // Handle clear from picker if possible (usually picker only sets value)
-                      setFilters({ ...filters, tanggal: '' });
-                    }
-                  }}
-                />
-              </div>
-
-            </div>
-
-            <div>
-              <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium">Tgl Scan</span>
-              </div>
-              <div className="relative" onClick={() => tglScanInputRef.current?.showPicker()}>
-                <input
-                  type="text"
-                  value={filters.tglScan}
-                  onChange={(e) => setFilters({ ...filters, tglScan: e.target.value })}
-                  placeholder="dd/mm/yyyy"
-                  className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 cursor-pointer"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenManualFilter('tglScan');
-                    }}
-                    className="p-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-md transition-all border border-blue-200 shadow-sm"
-                    title="Input Manual"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </button>
-                  {filters.tglScan ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFilters({ ...filters, tglScan: '' });
-                        if (tglScanInputRef.current) tglScanInputRef.current.value = '';
-                      }}
-                      className="p-1 px-1.5 bg-gray-100/50 hover:bg-gray-200 text-gray-500 hover:text-gray-700 rounded-md transition-all backdrop-blur-sm border border-gray-200"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <Calendar className="h-4 w-4 text-gray-400 pointer-events-none" />
-                  )}
-                </div>
-                <input
-                  ref={tglScanInputRef}
-                  type="date"
-                  value={normalizeFilterDate(filters.tglScan)} // Bind value
-                  className="absolute bottom-0 left-0 w-0 h-0 opacity-0"
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val) {
-                      setFilters({ ...filters, tglScan: val });
-                    } else {
-                      setFilters({ ...filters, tglScan: '' });
-                    }
-                  }}
-                />
-              </div>
-
-            </div>
-            <div>
-              <div className="bg-amber-600 text-white px-3 py-2 rounded-t-md">
-                <span className="font-medium text-sm">Status Penyesuaian</span>
-              </div>
-              <select
-                value={filters.isAdjustment}
-                onChange={(e) => setFilters({ ...filters, isAdjustment: e.target.value })}
-                className="w-full px-3 py-2 border border-amber-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-sm"
-              >
-                <option value="">Semua Data</option>
-                <option value="true">Penyesuaian (Adjustment)</option>
-                <option value="false">Normal (Bukan Penyesuaian)</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <Button
-                onClick={clearAllFilters}
-                disabled={!dataLoaded}
-                className="w-full h-10 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-50"
-              >
-                <span className="tracking-wide uppercase text-xs">Clear Filters</span>
-              </Button>
-            </div>
-          </div>
-
-          {selectedIds.size > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 shadow-sm sticky top-0 md:relative z-20">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-blue-100 pb-2">
-                  <span className="text-sm font-bold text-blue-900 bg-blue-100 px-3 py-1 rounded-full">
-                    {selectedIds.size} data terpilih
+                <Button
+                  onClick={handleLoadData}
+                  disabled={loading}
+                  className="w-full sm:w-auto h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50 shrink-0"
+                >
+                  <span className="tracking-wide uppercase text-sm">
+                    {loading ? 'Memuat...' : 'Muat Data'}
                   </span>
-                  <Button
-                    onClick={clearSelection}
-                    className="h-8 px-3 bg-white hover:bg-gray-50 text-gray-600 font-bold rounded-lg text-[10px] uppercase tracking-wider border border-gray-200 shadow-sm transition-all"
-                  >
-                    Batal
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2">
-                  <Button
-                    onClick={() => { setBulkEditMode('tanggal'); setBulkEditValue(''); }}
-                    className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Tgl Nota</span>
-                  </Button>
-                  <Button
-                    onClick={() => { setBulkEditMode('tgl_scan'); setBulkEditValue(''); }}
-                    className="h-9 px-3 bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-lg border border-indigo-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Tgl Scan</span>
-                  </Button>
-                  <Button
-                    onClick={() => { setBulkEditMode('gudang'); setBulkEditValue(''); }}
-                    className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Building2 className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Gudang</span>
-                  </Button>
-                  <Button
-                    onClick={() => { setBulkEditMode('user'); setBulkEditValue(''); }}
-                    className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <User className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">User</span>
-                  </Button>
-                  <Button
-                    onClick={() => { setBulkEditMode('rak'); setBulkEditValue(''); }}
-                    className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Package className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Rak</span>
-                  </Button>
-                  <Button
-                    onClick={() => handleBulkUpdate('is_adjustment', true)}
-                    className="h-9 px-3 bg-white hover:bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200 shadow-sm transition-all flex items-center justify-center"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Tag className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Adjust</span>
-                  </Button>
-                  <Button
-                    onClick={handleBulkDelete}
-                    className="h-9 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg border border-red-200 shadow-sm transition-all flex items-center justify-center col-span-2 sm:col-span-1"
-                    disabled={isBulkOperationLoading}
-                  >
-                    <Trash className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-[10px] uppercase tracking-wider">Hapus</span>
-                  </Button>
-                </div>
+                </Button>
               </div>
             </div>
-          )}
 
-          <Modal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} title="Import Database Log dari CSV" size="lg">
-            <div className="space-y-6">
-              {!importProgress.isImporting ? (
-                <>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-blue-800">Format File CSV</h4>
-                    </div>
-                    <div className="text-sm text-blue-700 space-y-2">
-                      <div className="bg-white p-3 rounded border border-blue-200 font-mono text-xs">
-                        <div className="font-bold text-blue-800 mb-1">Contoh format CSV:</div>
-                        <div>Tgl,Waktu,SKU,Jumlah,Type,Gudang,Rak,Tgl Scan,User,Sub Rak,Log Update User</div>
-                        <div>01/01/25,10:30,BRG001,10,IN,UTAMA,A1,01/01/25,Admin,A1-1,Admin</div>
-                        <div>01/01/25,11:15,BRG002,5,OUT,UTAMA,B2,01/01/25,User1,B2-3,User1</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">SKU</span>
+                </div>
+                <FilterDropdown
+                  value={filters.sku}
+                  onChange={(value) => setFilters({ ...filters, sku: value })}
+                  options={allSkus}
+                  placeholder="Cari SKU..."
+                  loading={dropdownsLoading}
+                />
+              </div>
+
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">Type</span>
+                </div>
+                <select
+                  value={filters.type}
+                  onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">Semua Type</option>
+                  <option value="IN">IN</option>
+                  <option value="OUT">OUT</option>
+                  <option value="MOVE">MOVE</option>
+                </select>
+              </div>
+
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">Gudang</span>
+                </div>
+                <FilterDropdown
+                  value={filters.gudang}
+                  onChange={(value) => setFilters({ ...filters, gudang: value })}
+                  options={allGudangs}
+                  placeholder="Cari gudang..."
+                  loading={dropdownsLoading}
+                />
+              </div>
+
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">Rak</span>
+                </div>
+                <FilterDropdown
+                  value={filters.rak}
+                  onChange={(value) => setFilters({ ...filters, rak: value })}
+                  options={allRaks}
+                  placeholder="Cari rak..."
+                  loading={dropdownsLoading}
+                />
+              </div>
+
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">Tanggal</span>
+                </div>
+                <div className="relative" onClick={() => tanggalInputRef.current?.showPicker()}>
+                  <input
+                    type="text"
+                    value={filters.tanggal}
+                    onChange={(e) => setFilters({ ...filters, tanggal: e.target.value })}
+                    placeholder="dd/mm/yyyy"
+                    className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 cursor-pointer"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenManualFilter('tanggal');
+                      }}
+                      className="p-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-md transition-all border border-blue-200 shadow-sm"
+                      title="Input Manual"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    {filters.tanggal ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFilters({ ...filters, tanggal: '' });
+                          if (tanggalInputRef.current) tanggalInputRef.current.value = '';
+                        }}
+                        className="p-1 px-1.5 bg-gray-100/50 hover:bg-gray-200 text-gray-500 hover:text-gray-700 rounded-md transition-all backdrop-blur-sm border border-gray-200"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <Calendar className="h-4 w-4 text-gray-400 pointer-events-none" />
+                    )}
+                  </div>
+                  <input
+                    ref={tanggalInputRef}
+                    type="date"
+                    value={normalizeFilterDate(filters.tanggal)} // Bind value so it clears when state clears
+                    className="absolute bottom-0 left-0 w-0 h-0 opacity-0"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        setFilters({ ...filters, tanggal: val });
+                      } else {
+                        // Handle clear from picker if possible (usually picker only sets value)
+                        setFilters({ ...filters, tanggal: '' });
+                      }
+                    }}
+                  />
+                </div>
+
+              </div>
+
+              <div>
+                <div className="bg-blue-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium">Tgl Scan</span>
+                </div>
+                <div className="relative" onClick={() => tglScanInputRef.current?.showPicker()}>
+                  <input
+                    type="text"
+                    value={filters.tglScan}
+                    onChange={(e) => setFilters({ ...filters, tglScan: e.target.value })}
+                    placeholder="dd/mm/yyyy"
+                    className="w-full px-3 py-2 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 cursor-pointer"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenManualFilter('tglScan');
+                      }}
+                      className="p-1 px-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 rounded-md transition-all border border-blue-200 shadow-sm"
+                      title="Input Manual"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    {filters.tglScan ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFilters({ ...filters, tglScan: '' });
+                          if (tglScanInputRef.current) tglScanInputRef.current.value = '';
+                        }}
+                        className="p-1 px-1.5 bg-gray-100/50 hover:bg-gray-200 text-gray-500 hover:text-gray-700 rounded-md transition-all backdrop-blur-sm border border-gray-200"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <Calendar className="h-4 w-4 text-gray-400 pointer-events-none" />
+                    )}
+                  </div>
+                  <input
+                    ref={tglScanInputRef}
+                    type="date"
+                    value={normalizeFilterDate(filters.tglScan)} // Bind value
+                    className="absolute bottom-0 left-0 w-0 h-0 opacity-0"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        setFilters({ ...filters, tglScan: val });
+                      } else {
+                        setFilters({ ...filters, tglScan: '' });
+                      }
+                    }}
+                  />
+                </div>
+
+              </div>
+              <div>
+                <div className="bg-amber-600 text-white px-3 py-2 rounded-t-md">
+                  <span className="font-medium text-sm">Status Penyesuaian</span>
+                </div>
+                <select
+                  value={filters.isAdjustment}
+                  onChange={(e) => setFilters({ ...filters, isAdjustment: e.target.value })}
+                  className="w-full px-3 py-2 border border-amber-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-sm"
+                >
+                  <option value="">Semua Data</option>
+                  <option value="true">Penyesuaian (Adjustment)</option>
+                  <option value="false">Normal (Bukan Penyesuaian)</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <Button
+                  onClick={clearAllFilters}
+                  disabled={!dataLoaded}
+                  className="w-full h-10 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-50"
+                >
+                  <span className="tracking-wide uppercase text-xs">Clear Filters</span>
+                </Button>
+              </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 shadow-sm sticky top-0 md:relative z-20">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+                    <span className="text-sm font-bold text-blue-900 bg-blue-100 px-3 py-1 rounded-full">
+                      {selectedIds.size} data terpilih
+                    </span>
+                    <Button
+                      onClick={clearSelection}
+                      className="h-8 px-3 bg-white hover:bg-gray-50 text-gray-600 font-bold rounded-lg text-[10px] uppercase tracking-wider border border-gray-200 shadow-sm transition-all"
+                    >
+                      Batal
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2">
+                    <Button
+                      onClick={() => { setBulkEditMode('tanggal'); setBulkEditValue(''); }}
+                      className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Tgl Nota</span>
+                    </Button>
+                    <Button
+                      onClick={() => { setBulkEditMode('tgl_scan'); setBulkEditValue(''); }}
+                      className="h-9 px-3 bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-lg border border-indigo-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Tgl Scan</span>
+                    </Button>
+                    <Button
+                      onClick={() => { setBulkEditMode('gudang'); setBulkEditValue(''); }}
+                      className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Building2 className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Gudang</span>
+                    </Button>
+                    <Button
+                      onClick={() => { setBulkEditMode('user'); setBulkEditValue(''); }}
+                      className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <User className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">User</span>
+                    </Button>
+                    <Button
+                      onClick={() => { setBulkEditMode('rak'); setBulkEditValue(''); }}
+                      className="h-9 px-3 bg-white hover:bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Package className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Rak</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleBulkUpdate('is_adjustment', true)}
+                      className="h-9 px-3 bg-white hover:bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-200 shadow-sm transition-all flex items-center justify-center"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Tag className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Adjust</span>
+                    </Button>
+                    <Button
+                      onClick={handleBulkDelete}
+                      className="h-9 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg border border-red-200 shadow-sm transition-all flex items-center justify-center col-span-2 sm:col-span-1"
+                      disabled={isBulkOperationLoading}
+                    >
+                      <Trash className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="text-[10px] uppercase tracking-wider">Hapus</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Modal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} title="Import Database Log dari CSV" size="lg">
+              <div className="space-y-6">
+                {!importProgress.isImporting ? (
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <h4 className="font-semibold text-blue-800">Format File CSV</h4>
                       </div>
-                      <p className="text-xs text-blue-600 mt-2">
-                        * <strong>Kolom Wajib:</strong> Tgl, Waktu, SKU, Type (IN/OUT/MOVE), Gudang, Rak<br />
-                        * <strong>Kolom Opsional:</strong> Jumlah (default: 0), Tgl Scan, User, Sub Rak, Log Update User<br />
-                        * <strong>Format Type:</strong> Harus IN, OUT, atau MOVE<br />
-                        * <strong>Format Tanggal:</strong> DD/MM/YYYY, DD-MM-YYYY, atau YYYY-MM-DD<br />
-                        * Baris pertama akan diabaikan jika berisi header<br />
-                        * Mendukung format CSV dengan koma (,), titik koma (;), atau tab
+                      <div className="text-sm text-blue-700 space-y-2">
+                        <div className="bg-white p-3 rounded border border-blue-200 font-mono text-xs">
+                          <div className="font-bold text-blue-800 mb-1">Contoh format CSV:</div>
+                          <div>Tgl,Waktu,SKU,Jumlah,Type,Gudang,Rak,Tgl Scan,User,Sub Rak,Log Update User</div>
+                          <div>01/01/25,10:30,BRG001,10,IN,UTAMA,A1,01/01/25,Admin,A1-1,Admin</div>
+                          <div>01/01/25,11:15,BRG002,5,OUT,UTAMA,B2,01/01/25,User1,B2-3,User1</div>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-2">
+                          * <strong>Kolom Wajib:</strong> Tgl, Waktu, SKU, Type (IN/OUT/MOVE), Gudang, Rak<br />
+                          * <strong>Kolom Opsional:</strong> Jumlah (default: 0), Tgl Scan, User, Sub Rak, Log Update User<br />
+                          * <strong>Format Type:</strong> Harus IN, OUT, atau MOVE<br />
+                          * <strong>Format Tanggal:</strong> DD/MM/YYYY, DD-MM-YYYY, atau YYYY-MM-DD<br />
+                          * Baris pertama akan diabaikan jika berisi header<br />
+                          * Mendukung format CSV dengan koma (,), titik koma (;), atau tab
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                        }`}
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                    >
+                      <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-700 mb-2">
+                        Drag & Drop file CSV di sini
+                      </p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        atau klik tombol di bawah untuk memilih file
+                      </p>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileInputChange}
+                        className="hidden"
+                        id="csv-file-input"
+                      />
+                      <div className="flex justify-center">
+                        <Button
+                          type="button"
+                          onClick={() => document.getElementById('csv-file-input')?.click()}
+                          className="h-10 px-8 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md mx-auto"
+                        >
+                          <Upload className="h-5 w-5 mr-2" />
+                          Pilih File CSV
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Upload className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                        Mengimpor Database Log
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {importProgress.message}
                       </p>
                     </div>
-                  </div>
 
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${importProgress.progress}%` }}
+                      ></div>
+                    </div>
+
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>{importProgress.current} / {importProgress.total}</span>
+                      <span>{importProgress.progress}%</span>
+                    </div>
+
+                    {importProgress.progress === 100 && (
+                      <div className="flex items-center justify-center space-x-2 text-green-600">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-medium">Import berhasil!</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Modal>
+
+            {/* Export Progress Modal */}
+            <Modal isOpen={exportProgress.isExporting} onClose={() => { }} title="Mengexport Data Log" size="md">
+              <div className="space-y-6 py-4">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                    <Download className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-800 mb-2">
+                    Sedang Mengunduh Data
+                  </h4>
+                  <p className="text-gray-600 mb-6">
+                    {exportProgress.message}
+                  </p>
+                </div>
+
+                <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                   <div
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-                      }`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
+                    className="bg-blue-600 h-full transition-all duration-300 ease-out flex items-center justify-center text-[10px] text-white font-bold"
+                    style={{ width: `${exportProgress.progress}%` }}
                   >
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-lg font-medium text-gray-700 mb-2">
-                      Drag & Drop file CSV di sini
-                    </p>
-                    <p className="text-sm text-gray-500 mb-4">
-                      atau klik tombol di bawah untuk memilih file
-                    </p>
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileInputChange}
-                      className="hidden"
-                      id="csv-file-input"
-                    />
-                    <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        onClick={() => document.getElementById('csv-file-input')?.click()}
-                        className="h-10 px-8 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md mx-auto"
-                      >
-                        <Upload className="h-5 w-5 mr-2" />
-                        Pilih File CSV
-                      </Button>
-                    </div>
+                    {exportProgress.progress}%
                   </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Upload className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                      Mengimpor Database Log
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {importProgress.message}
-                    </p>
-                  </div>
-
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${importProgress.progress}%` }}
-                    ></div>
-                  </div>
-
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>{importProgress.current} / {importProgress.total}</span>
-                    <span>{importProgress.progress}%</span>
-                  </div>
-
-                  {importProgress.progress === 100 && (
-                    <div className="flex items-center justify-center space-x-2 text-green-600">
-                      <CheckCircle className="h-5 w-5" />
-                      <span className="font-medium">Import berhasil!</span>
-                    </div>
-                  )}
                 </div>
-              )}
-            </div>
-          </Modal>
 
-          {/* Export Progress Modal */}
-          <Modal isOpen={exportProgress.isExporting} onClose={() => { }} title="Mengexport Data Log" size="md">
-            <div className="space-y-6 py-4">
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
-                  <Download className="h-8 w-8 text-blue-600" />
+                <div className="flex justify-between text-sm text-gray-500 font-medium">
+                  <span>Proses: {exportProgress.current.toLocaleString()} / {exportProgress.total.toLocaleString()}</span>
+                  <span>{exportProgress.progress}% Selesai</span>
                 </div>
-                <h4 className="text-xl font-semibold text-gray-800 mb-2">
-                  Sedang Mengunduh Data
-                </h4>
-                <p className="text-gray-600 mb-6">
-                  {exportProgress.message}
-                </p>
-              </div>
 
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div
-                  className="bg-blue-600 h-full transition-all duration-300 ease-out flex items-center justify-center text-[10px] text-white font-bold"
-                  style={{ width: `${exportProgress.progress}%` }}
-                >
-                  {exportProgress.progress}%
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800 flex items-start">
+                  <div className="mr-2 mt-0.5">ℹ️</div>
+                  <div>
+                    Mohon jangan tutup halaman ini hingga proses selesai.
+                    {exportProgress.total > 5000 && ' Export data dalam jumlah besar mungkin memakan waktu beberapa saat.'}
+                  </div>
                 </div>
               </div>
+            </Modal>
 
-              <div className="flex justify-between text-sm text-gray-500 font-medium">
-                <span>Proses: {exportProgress.current.toLocaleString()} / {exportProgress.total.toLocaleString()}</span>
-                <span>{exportProgress.progress}% Selesai</span>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800 flex items-start">
-                <div className="mr-2 mt-0.5">ℹ️</div>
-                <div>
-                  Mohon jangan tutup halaman ini hingga proses selesai.
-                  {exportProgress.total > 5000 && ' Export data dalam jumlah besar mungkin memakan waktu beberapa saat.'}
-                </div>
-              </div>
-            </div>
-          </Modal>
-
-          <Card>
-            <CardContent className="p-0">
-              {loading && dataLoaded && (
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-blue-600 font-medium">Memuat data...</div>
-                </div>
-              )}
-              <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                {/* Desktop View Table */}
-                <div className="hidden md:block">
-                  <table className="w-full text-sm">
-                    <thead className="bg-blue-600 text-white sticky top-0 z-10">
-                      <tr>
-                        <th className="px-3 py-3 text-center font-medium border-r border-blue-500 w-12">
-                          <input
-                            type="checkbox"
-                            checked={isAllPageSelected}
-                            onChange={handleSelectAll}
-                            className="w-4 h-4 cursor-pointer"
-                          />
-                        </th>
-                        <th
-                          className="px-4 py-3 text-left font-medium border-r border-blue-500 cursor-pointer hover:bg-blue-700 transition-colors group"
-                          onClick={() => handleSort('tgl')}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>Tgl</span>
-                            {sortConfig?.key === 'tgl' ? (
-                              sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                            ) : (
-                              <ArrowUpDown className="w-4 h-4 opacity-50 group-hover:opacity-100" />
-                            )}
-                          </div>
-                        </th>
-                        <th
-                          className="px-4 py-3 text-left font-medium border-r border-blue-500 cursor-pointer hover:bg-blue-700 transition-colors group"
-                          onClick={() => handleSort('waktu')}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>Waktu</span>
-                            {sortConfig?.key === 'waktu' ? (
-                              sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                            ) : (
-                              <ArrowUpDown className="w-4 h-4 opacity-50 group-hover:opacity-100" />
-                            )}
-                          </div>
-                        </th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">SKU</th>
-                        <th className="px-4 py-3 text-center font-medium border-r border-blue-500">Jumlah</th>
-                        <th className="px-4 py-3 text-center font-medium border-r border-blue-500">Type</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Gudang</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Rak</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Tgl Scan</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">User</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Sub Rak</th>
-                        <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Log Update User</th>
-                        <th className="px-4 py-3 text-center font-medium">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dataLoaded && filteredEntries.map((entry, index) => (
-                        <tr key={entry.id} className={`${selectedIds.has(entry.id) ? 'bg-blue-200' : entry.is_adjustment ? 'bg-amber-50' : index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 border-b border-gray-200 transition-colors`}>
-                          <td className="px-3 py-2 text-center border-r border-gray-200 w-12">
+            <Card>
+              <CardContent className="p-0">
+                {loading && dataLoaded && (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-blue-600 font-medium">Memuat data...</div>
+                  </div>
+                )}
+                <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+                  {/* Desktop View Table */}
+                  <div className="hidden md:block">
+                    <table className="w-full text-sm">
+                      <thead className="bg-blue-600 text-white sticky top-0 z-10">
+                        <tr>
+                          <th className="px-3 py-3 text-center font-medium border-r border-blue-500 w-12">
                             <input
                               type="checkbox"
-                              checked={selectedIds.has(entry.id)}
-                              onChange={() => handleCheckboxChange(entry.id)}
+                              checked={isAllPageSelected}
+                              onChange={handleSelectAll}
                               className="w-4 h-4 cursor-pointer"
                             />
-                          </td>
-                          <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{formatDateDisplay(entry.tgl)}</td>
-                          <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{entry.waktu}</td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">
-                            <div className="flex items-center justify-between">
-                              <span className={entry.is_adjustment ? 'font-bold text-amber-800' : ''}>{entry.sku}</span>
-                              {entry.is_adjustment && (
-                                <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-2 shadow-sm border border-amber-200 shrink-0">
-                                  <Tag className="h-2.5 w-2.5" />
-                                  PENYESUAIAN
-                                </span>
+                          </th>
+                          <th
+                            className="px-4 py-3 text-left font-medium border-r border-blue-500 cursor-pointer hover:bg-blue-700 transition-colors group"
+                            onClick={() => handleSort('tgl')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>Tgl</span>
+                              {sortConfig?.key === 'tgl' ? (
+                                sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                              ) : (
+                                <ArrowUpDown className="w-4 h-4 opacity-50 group-hover:opacity-100" />
                               )}
                             </div>
-                          </td>
-                          <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{entry.jumlah}</td>
-                          <td className="px-4 py-2 text-center border-r border-gray-200">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${entry.type === 'IN' ? 'bg-green-100 text-green-800' :
-                              entry.type === 'OUT' ? 'bg-red-100 text-red-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
-                              {entry.type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.gudang}</td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.rak}</td>
-                          <td
-                            className="px-4 py-2 text-sm border-r border-gray-200 cursor-pointer hover:bg-blue-200 transition-colors"
-                            onClick={() => setFilters({ ...filters, tglScan: entry.tgl_scan || '' })}
-                            title="Klik untuk filter Tgl Scan"
+                          </th>
+                          <th
+                            className="px-4 py-3 text-left font-medium border-r border-blue-500 cursor-pointer hover:bg-blue-700 transition-colors group"
+                            onClick={() => handleSort('waktu')}
                           >
-                            {formatDateDisplay(entry.tgl_scan)}
-                          </td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.user}</td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.sub_rak}</td>
-                          <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.log_update_user}</td>
-                          <td className="px-4 py-2 text-center">
-                            <div className="flex justify-center space-x-2">
-                              <Button
-                                onClick={() => handleEdit(entry)}
-                                className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg transition-all border border-blue-200 backdrop-blur-sm flex items-center justify-center"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                onClick={() => handleDelete(entry.id)}
-                                className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-lg transition-all border border-red-200 backdrop-blur-sm flex items-center justify-center"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            <div className="flex items-center space-x-1">
+                              <span>Waktu</span>
+                              {sortConfig?.key === 'waktu' ? (
+                                sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                              ) : (
+                                <ArrowUpDown className="w-4 h-4 opacity-50 group-hover:opacity-100" />
+                              )}
                             </div>
-                          </td>
+                          </th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">SKU</th>
+                          <th className="px-4 py-3 text-center font-medium border-r border-blue-500">Jumlah</th>
+                          <th className="px-4 py-3 text-center font-medium border-r border-blue-500">Type</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Gudang</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Rak</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Tgl Scan</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">User</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Sub Rak</th>
+                          <th className="px-4 py-3 text-left font-medium border-r border-blue-500">Log Update User</th>
+                          <th className="px-4 py-3 text-center font-medium">Aksi</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile View Cards */}
-                <div className="md:hidden">
-                  <div className="bg-blue-600 text-white p-3 flex items-center gap-3 sticky top-0 z-10 border-b border-blue-500">
-                    <input
-                      type="checkbox"
-                      checked={isAllPageSelected}
-                      onChange={handleSelectAll}
-                      className="w-5 h-5 cursor-pointer rounded"
-                    />
-                    <span className="font-bold text-sm">Pilih Semua di Halaman Ini</span>
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {dataLoaded && filteredEntries.map((entry, index) => (
-                      <div
-                        key={entry.id}
-                        className={`p-4 ${selectedIds.has(entry.id) ? 'bg-blue-100' : entry.is_adjustment ? 'bg-amber-50' : 'bg-white'} active:bg-blue-50 transition-colors relative`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="pt-1">
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(entry.id)}
-                              onChange={() => handleCheckboxChange(entry.id)}
-                              className="w-5 h-5 cursor-pointer rounded"
-                            />
-                          </div>
-                          <div className="flex-1 space-y-3">
-                            {/* Baris 1: SKU dan Type */}
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className={`text-base font-bold text-gray-900 ${entry.is_adjustment ? 'text-amber-900' : ''}`}>
-                                  {entry.sku}
-                                </h4>
+                      </thead>
+                      <tbody>
+                        {dataLoaded && filteredEntries.map((entry, index) => (
+                          <tr key={entry.id} className={`${selectedIds.has(entry.id) ? 'bg-blue-200' : entry.is_adjustment ? 'bg-amber-50' : index % 2 === 0 ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 border-b border-gray-200 transition-colors`}>
+                            <td className="px-3 py-2 text-center border-r border-gray-200 w-12">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(entry.id)}
+                                onChange={() => handleCheckboxChange(entry.id)}
+                                className="w-4 h-4 cursor-pointer"
+                              />
+                            </td>
+                            <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{formatDateDisplay(entry.tgl)}</td>
+                            <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{entry.waktu}</td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">
+                              <div className="flex items-center justify-between">
+                                <span className={entry.is_adjustment ? 'font-bold text-amber-800' : ''}>{entry.sku}</span>
                                 {entry.is_adjustment && (
-                                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold mt-1 border border-amber-200 shadow-sm">
+                                  <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-2 shadow-sm border border-amber-200 shrink-0">
                                     <Tag className="h-2.5 w-2.5" />
                                     PENYESUAIAN
                                   </span>
                                 )}
                               </div>
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${entry.type === 'IN' ? 'bg-green-100 text-green-800 border border-green-200' :
-                                entry.type === 'OUT' ? 'bg-red-100 text-red-800 border border-red-200' :
-                                  'bg-blue-100 text-blue-800 border border-blue-200'
+                            </td>
+                            <td className="px-4 py-2 text-sm text-center border-r border-gray-200">{entry.jumlah}</td>
+                            <td className="px-4 py-2 text-center border-r border-gray-200">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${entry.type === 'IN' ? 'bg-green-100 text-green-800' :
+                                entry.type === 'OUT' ? 'bg-red-100 text-red-800' :
+                                  'bg-blue-100 text-blue-800'
                                 }`}>
                                 {entry.type}
                               </span>
-                            </div>
+                            </td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.gudang}</td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.rak}</td>
+                            <td
+                              className="px-4 py-2 text-sm border-r border-gray-200 cursor-pointer hover:bg-blue-200 transition-colors"
+                              onClick={() => setFilters({ ...filters, tglScan: entry.tgl_scan || '' })}
+                              title="Klik untuk filter Tgl Scan"
+                            >
+                              {formatDateDisplay(entry.tgl_scan)}
+                            </td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.user}</td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.sub_rak}</td>
+                            <td className="px-4 py-2 text-sm border-r border-gray-200">{entry.log_update_user}</td>
+                            <td className="px-4 py-2 text-center">
+                              <div className="flex justify-center space-x-2">
+                                <Button
+                                  onClick={() => handleEdit(entry)}
+                                  className="h-8 w-8 p-0 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg transition-all border border-blue-200 backdrop-blur-sm flex items-center justify-center"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  onClick={() => handleDelete(entry.id)}
+                                  className="h-8 w-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-lg transition-all border border-red-200 backdrop-blur-sm flex items-center justify-center"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                            {/* Baris 2: Qty, Rak, Gudang */}
-                            <div className="grid grid-cols-2 gap-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
-                              <div>
-                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Jumlah</p>
-                                <p className="text-sm font-bold text-gray-800">{entry.jumlah} Unit</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Lokasi Rak</p>
-                                <p className="text-sm font-bold text-blue-600">{entry.rak}</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Gudang</p>
-                                <p className="text-sm font-medium text-gray-700">{entry.gudang}</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Sub Rak</p>
-                                <p className="text-sm font-medium text-gray-700">{entry.sub_rak || '-'}</p>
-                              </div>
+                  {/* Mobile View Cards */}
+                  <div className="md:hidden">
+                    <div className="bg-blue-600 text-white p-3 flex items-center gap-3 sticky top-0 z-10 border-b border-blue-500">
+                      <input
+                        type="checkbox"
+                        checked={isAllPageSelected}
+                        onChange={handleSelectAll}
+                        className="w-5 h-5 cursor-pointer rounded"
+                      />
+                      <span className="font-bold text-sm">Pilih Semua di Halaman Ini</span>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {dataLoaded && filteredEntries.map((entry, index) => (
+                        <div
+                          key={entry.id}
+                          className={`p-4 ${selectedIds.has(entry.id) ? 'bg-blue-100' : entry.is_adjustment ? 'bg-amber-50' : 'bg-white'} active:bg-blue-50 transition-colors relative`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="pt-1">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(entry.id)}
+                                onChange={() => handleCheckboxChange(entry.id)}
+                                className="w-5 h-5 cursor-pointer rounded"
+                              />
                             </div>
+                            <div className="flex-1 space-y-3">
+                              {/* Baris 1: SKU dan Type */}
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className={`text-base font-bold text-gray-900 ${entry.is_adjustment ? 'text-amber-900' : ''}`}>
+                                    {entry.sku}
+                                  </h4>
+                                  {entry.is_adjustment && (
+                                    <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold mt-1 border border-amber-200 shadow-sm">
+                                      <Tag className="h-2.5 w-2.5" />
+                                      PENYESUAIAN
+                                    </span>
+                                  )}
+                                </div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${entry.type === 'IN' ? 'bg-green-100 text-green-800 border border-green-200' :
+                                  entry.type === 'OUT' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                    'bg-blue-100 text-blue-800 border border-blue-200'
+                                  }`}>
+                                  {entry.type}
+                                </span>
+                              </div>
 
-                            {/* Baris 3: Tanggal & User */}
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-                              <div className="flex items-center text-gray-500">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                <span>{formatDateDisplay(entry.tgl)} ({entry.waktu})</span>
+                              {/* Baris 2: Qty, Rak, Gudang */}
+                              <div className="grid grid-cols-2 gap-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
+                                <div>
+                                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Jumlah</p>
+                                  <p className="text-sm font-bold text-gray-800">{entry.jumlah} Unit</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Lokasi Rak</p>
+                                  <p className="text-sm font-bold text-blue-600">{entry.rak}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Gudang</p>
+                                  <p className="text-sm font-medium text-gray-700">{entry.gudang}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Sub Rak</p>
+                                  <p className="text-sm font-medium text-gray-700">{entry.sub_rak || '-'}</p>
+                                </div>
                               </div>
-                              <div className="flex items-center text-indigo-600 font-medium">
-                                <RefreshCw className="h-3 w-3 mr-1" />
-                                <span>Scan: {formatDateDisplay(entry.tgl_scan)}</span>
-                              </div>
-                              <div className="flex items-center text-gray-500">
-                                <User className="h-3 w-3 mr-1" />
-                                <span>By: {entry.user}</span>
-                              </div>
-                            </div>
 
-                            {/* Tombol Aksi Mobile */}
-                            <div className="flex justify-end gap-2 pt-2">
-                              <Button
-                                onClick={() => handleEdit(entry)}
-                                className="h-9 px-4 bg-blue-50 text-blue-600 rounded-lg font-bold text-xs flex items-center justify-center border border-blue-100 flex-1"
-                              >
-                                <Edit2 className="h-3.5 w-3.5 mr-1.5" />
-                                Edit
-                              </Button>
-                              <Button
-                                onClick={() => handleDelete(entry.id)}
-                                className="h-9 px-4 bg-red-50 text-red-600 rounded-lg font-bold text-xs flex items-center justify-center border border-red-100 flex-1"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                                Hapus
-                              </Button>
+                              {/* Baris 3: Tanggal & User */}
+                              <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+                                <div className="flex items-center text-gray-500">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  <span>{formatDateDisplay(entry.tgl)} ({entry.waktu})</span>
+                                </div>
+                                <div className="flex items-center text-indigo-600 font-medium">
+                                  <RefreshCw className="h-3 w-3 mr-1" />
+                                  <span>Scan: {formatDateDisplay(entry.tgl_scan)}</span>
+                                </div>
+                                <div className="flex items-center text-gray-500">
+                                  <User className="h-3 w-3 mr-1" />
+                                  <span>By: {entry.user}</span>
+                                </div>
+                              </div>
+
+                              {/* Tombol Aksi Mobile */}
+                              <div className="flex justify-end gap-2 pt-2">
+                                <Button
+                                  onClick={() => handleEdit(entry)}
+                                  className="h-9 px-4 bg-blue-50 text-blue-600 rounded-lg font-bold text-xs flex items-center justify-center border border-blue-100 flex-1"
+                                >
+                                  <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  onClick={() => handleDelete(entry.id)}
+                                  className="h-9 px-4 bg-red-50 text-red-600 rounded-lg font-bold text-xs flex items-center justify-center border border-red-100 flex-1"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                  Hapus
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {dataLoaded && filteredEntries.length === 0 && !loading && (
-                  <div className="px-4 py-8 text-center text-gray-500">
-                    Tidak ada data yang sesuai dengan filter
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl shadow-md border border-blue-200">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Data</span>
-                <span className="text-2xl font-bold text-blue-600">{totalCount.toLocaleString()}</span>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Data Ditampilkan</span>
-                <span className="text-2xl font-bold text-green-600">{filteredEntries.length.toLocaleString()}</span>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Qty (Halaman Ini)</span>
-                <span className="text-2xl font-bold text-orange-600">
-                  {filteredEntries.reduce((sum, item) => sum + (item.jumlah || 0), 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Qty OUT (Halaman Ini)</span>
-                <span className="text-2xl font-bold text-rose-600">
-                  {filteredEntries
-                    .filter(item => item.type === 'OUT')
-                    .reduce((sum, item) => sum + (item.jumlah || 0), 0)
-                    .toLocaleString()
-                  }
-                </span>
-              </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Halaman</span>
-                <span className="text-2xl font-bold text-purple-600">{currentPage} / {totalPages || 1}</span>
-              </div>
-            </div>
-
-            {totalCount > itemsPerPage && (
-              <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1 flex items-center gap-4">
-                  <span>Menampilkan {startIndex + 1} - {endIndex} dari {totalCount.toLocaleString()} data</span>
-                  <div className="relative">
-                    <select
-                      value={itemsPerPage}
-                      onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                      className="appearance-none pl-4 pr-10 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <option value={100}>100 per halaman</option>
-                      <option value={200}>200 per halaman</option>
-                      <option value={500}>500 per halaman</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                      <ChevronDown className="h-4 w-4" />
+                      ))}
                     </div>
                   </div>
+
+                  {dataLoaded && filteredEntries.length === 0 && !loading && (
+                    <div className="px-4 py-8 text-center text-gray-500">
+                      Tidak ada data yang sesuai dengan filter
+                    </div>
+                  )}
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex flex-wrap justify-center sm:justify-end items-center gap-1 sm:gap-2 order-1 sm:order-2">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
-                  >
-                    <span className="tracking-wide uppercase text-xs">Awal</span>
-                  </button>
-
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
-                  >
-                    <span className="tracking-wide uppercase text-xs">Prev</span>
-                  </button>
-
-                  <div className="flex gap-1.5 flex-wrap justify-center items-center mx-2">
-                    {(() => {
-                      const pages = [];
-
-                      if (totalPages <= 7) {
-                        for (let i = 1; i <= totalPages; i++) {
-                          pages.push(
-                            <button
-                              key={i}
-                              onClick={() => setCurrentPage(i)}
-                              className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === i
-                                ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
-                                : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
-                                }`}
-                            >
-                              {i}
-                            </button>
-                          );
-                        }
-                      } else {
-                        pages.push(
-                          <button
-                            key={1}
-                            onClick={() => setCurrentPage(1)}
-                            className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === 1
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
-                              : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
-                              }`}
-                          >
-                            1
-                          </button>
-                        );
-
-                        if (currentPage > 3) {
-                          pages.push(
-                            <span key="dots1" className="text-slate-400 font-bold px-1">...</span>
-                          );
-                        }
-
-                        let startPage = Math.max(2, currentPage - 1);
-                        let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-                        if (currentPage <= 3) {
-                          startPage = 2;
-                          endPage = Math.min(4, totalPages - 1);
-                        } else if (currentPage >= totalPages - 2) {
-                          startPage = Math.max(2, totalPages - 3);
-                          endPage = totalPages - 1;
-                        }
-
-                        for (let i = startPage; i <= endPage; i++) {
-                          pages.push(
-                            <button
-                              key={i}
-                              onClick={() => setCurrentPage(i)}
-                              className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === i
-                                ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
-                                : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
-                                }`}
-                            >
-                              {i}
-                            </button>
-                          );
-                        }
-
-                        if (currentPage < totalPages - 2) {
-                          pages.push(
-                            <span key="dots2" className="text-slate-400 font-bold px-1">...</span>
-                          );
-                        }
-
-                        pages.push(
-                          <button
-                            key={totalPages}
-                            onClick={() => setCurrentPage(totalPages)}
-                            className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === totalPages
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
-                              : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
-                              }`}
-                          >
-                            {totalPages}
-                          </button>
-                        );
-                      }
-
-                      return pages;
-                    })()}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
-                  >
-                    <span className="tracking-wide uppercase text-xs">Next</span>
-                  </button>
-
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
-                  >
-                    <span className="tracking-wide uppercase text-xs">Akhir</span>
-                  </button>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl shadow-md border border-blue-200">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Data</span>
+                  <span className="text-2xl font-bold text-blue-600">{totalCount.toLocaleString()}</span>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Data Ditampilkan</span>
+                  <span className="text-2xl font-bold text-green-600">{filteredEntries.length.toLocaleString()}</span>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Qty (Halaman Ini)</span>
+                  <span className="text-2xl font-bold text-orange-600">
+                    {filteredEntries.reduce((sum, item) => sum + (item.jumlah || 0), 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Total Qty OUT (Halaman Ini)</span>
+                  <span className="text-2xl font-bold text-rose-600">
+                    {filteredEntries
+                      .filter(item => item.type === 'OUT')
+                      .reduce((sum, item) => sum + (item.jumlah || 0), 0)
+                      .toLocaleString()
+                    }
+                  </span>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Halaman</span>
+                  <span className="text-2xl font-bold text-purple-600">{currentPage} / {totalPages || 1}</span>
                 </div>
               </div>
-            )}
-          </div>
 
-          <Modal isOpen={bulkEditMode === 'tanggal'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Tanggal">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-900">
-                  Mengubah tanggal untuk <strong>{selectedIds.size} data</strong>
-                </p>
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Baru</label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="date"
-                    value={bulkEditValue.includes('-') && bulkEditValue.length === 10 ? bulkEditValue : ''}
-                    onChange={(e) => setBulkEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={() => {
-                      setManualDateTarget('bulk_tanggal');
-                      setManualDateValue(bulkEditValue);
-                      setIsManualDateModalOpen(true);
-                    }}
-                    className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-all border border-blue-200"
-                    title="Bulk Edit Manual (Support formats: DD/MM/YYYY, etc.)"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                </div>
-                {bulkEditValue && !bulkEditValue.includes('-') && (
-                  <div className="mt-1 text-xs text-blue-600 font-medium">
-                    Nilai Manual: {bulkEditValue}
+              {totalCount > itemsPerPage && (
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1 flex items-center gap-4">
+                    <span>Menampilkan {startIndex + 1} - {endIndex} dari {totalCount.toLocaleString()} data</span>
+                    <div className="relative">
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                        className="appearance-none pl-4 pr-10 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors"
+                      >
+                        <option value={100}>100 per halaman</option>
+                        <option value={200}>200 per halaman</option>
+                        <option value={500}>500 per halaman</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
-                  className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={() => handleBulkUpdate('tgl', bulkEditValue)}
-                  disabled={!bulkEditValue || isBulkOperationLoading}
-                  className="h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
-                >
-                  {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
-                </Button>
-              </div>
-            </div>
-          </Modal>
 
-          <Modal isOpen={bulkEditMode === 'tgl_scan'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Tanggal Scan">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-900">
-                  Mengubah <strong>Tanggal Scan</strong> untuk <strong>{selectedIds.size} data terpilih</strong>
-                </p>
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Scan Baru</label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="date"
-                    value={bulkEditValue.includes('-') && bulkEditValue.length === 10 ? bulkEditValue : ''}
-                    onChange={(e) => setBulkEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={() => {
-                      setManualDateTarget('bulk_tgl_scan');
-                      setManualDateValue(bulkEditValue);
-                      setIsManualDateModalOpen(true);
-                    }}
-                    className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all border border-indigo-200"
-                    title="Bulk Edit Manual (Support formats: DD/MM/YYYY, etc.)"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                </div>
-                {bulkEditValue && !bulkEditValue.includes('-') && (
-                  <div className="mt-1 text-xs text-indigo-600 font-medium">
-                    Nilai Manual: {bulkEditValue}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
-                  className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={() => handleBulkUpdate('tgl_scan', bulkEditValue)}
-                  disabled={!bulkEditValue || isBulkOperationLoading}
-                  className="h-10 px-6 bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(99,102,241,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
-                >
-                  {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          <Modal isOpen={bulkEditMode === 'gudang'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Gudang">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-900">
-                  Mengubah gudang untuk <strong>{selectedIds.size} data</strong>
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gudang Baru</label>
-                <EditDropdown
-                  value={bulkEditValue}
-                  onChange={(value) => setBulkEditValue(value.trim())}
-                  options={allGudangs}
-                  placeholder="Pilih atau ketik gudang..."
-                  loading={dropdownsLoading}
-                />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }} variant="secondary">
-                  Batal
-                </Button>
-                <Button
-                  onClick={() => handleBulkUpdate('gudang', bulkEditValue)}
-                  variant="primary"
-                  disabled={!bulkEditValue || isBulkOperationLoading}
-                >
-                  {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          <Modal isOpen={bulkEditMode === 'user'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit User">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-900">
-                  Mengubah user untuk <strong>{selectedIds.size} data</strong>
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">User Baru</label>
-                <input
-                  type="text"
-                  value={bulkEditValue}
-                  onChange={(e) => setBulkEditValue(e.target.value.trimEnd())}
-                  placeholder="Masukkan nama user..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }} variant="secondary">
-                  Batal
-                </Button>
-                <Button
-                  onClick={() => handleBulkUpdate('user', bulkEditValue)}
-                  variant="primary"
-                  disabled={!bulkEditValue || isBulkOperationLoading}
-                >
-                  {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          <Modal isOpen={bulkEditMode === 'rak'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Rak & Sub Rak">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-900">
-                  Mengubah rak dan sub rak untuk <strong>{selectedIds.size} data</strong>
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rak Baru (Sub Rak akan sama)</label>
-                <EditDropdown
-                  value={bulkEditValue}
-                  onChange={(value) => setBulkEditValue(value.trimEnd())}
-                  options={allRaks}
-                  placeholder="Pilih atau ketik rak..."
-                  loading={dropdownsLoading}
-                />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button
-                  onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
-                  className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={() => handleBulkUpdate('rak', bulkEditValue)}
-                  disabled={!bulkEditValue || isBulkOperationLoading}
-                  className="h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
-                >
-                  {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          {editingEntry && (
-            <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Database Log Entry">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
-                    <input
-                      type="date"
-                      value={editingEntry.tgl}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, tgl: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Waktu</label>
-                    <input
-                      type="text"
-                      value={editingEntry.waktu}
-                      readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
-                    <EditDropdown
-                      value={editingEntry.sku}
-                      onChange={(value) => setEditingEntry({ ...editingEntry, sku: value.trimEnd() })}
-                      options={allSkus}
-                      placeholder="Pilih atau ketik SKU..."
-                      loading={dropdownsLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
-                    <input
-                      type="number"
-                      value={editingEntry.jumlah}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, jumlah: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                    <select
-                      value={editingEntry.type}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, type: e.target.value as 'IN' | 'OUT' | 'MOVE' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  <div className="flex flex-wrap justify-center sm:justify-end items-center gap-1 sm:gap-2 order-1 sm:order-2">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
                     >
-                      <option value="IN">IN</option>
-                      <option value="OUT">OUT</option>
-                      <option value="MOVE">MOVE</option>
-                    </select>
+                      <span className="tracking-wide uppercase text-xs">Awal</span>
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
+                    >
+                      <span className="tracking-wide uppercase text-xs">Prev</span>
+                    </button>
+
+                    <div className="flex gap-1.5 flex-wrap justify-center items-center mx-2">
+                      {(() => {
+                        const pages = [];
+
+                        if (totalPages <= 7) {
+                          for (let i = 1; i <= totalPages; i++) {
+                            pages.push(
+                              <button
+                                key={i}
+                                onClick={() => setCurrentPage(i)}
+                                className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === i
+                                  ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
+                                  : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
+                                  }`}
+                              >
+                                {i}
+                              </button>
+                            );
+                          }
+                        } else {
+                          pages.push(
+                            <button
+                              key={1}
+                              onClick={() => setCurrentPage(1)}
+                              className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === 1
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
+                                : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
+                                }`}
+                            >
+                              1
+                            </button>
+                          );
+
+                          if (currentPage > 3) {
+                            pages.push(
+                              <span key="dots1" className="text-slate-400 font-bold px-1">...</span>
+                            );
+                          }
+
+                          let startPage = Math.max(2, currentPage - 1);
+                          let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+                          if (currentPage <= 3) {
+                            startPage = 2;
+                            endPage = Math.min(4, totalPages - 1);
+                          } else if (currentPage >= totalPages - 2) {
+                            startPage = Math.max(2, totalPages - 3);
+                            endPage = totalPages - 1;
+                          }
+
+                          for (let i = startPage; i <= endPage; i++) {
+                            pages.push(
+                              <button
+                                key={i}
+                                onClick={() => setCurrentPage(i)}
+                                className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === i
+                                  ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
+                                  : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
+                                  }`}
+                              >
+                                {i}
+                              </button>
+                            );
+                          }
+
+                          if (currentPage < totalPages - 2) {
+                            pages.push(
+                              <span key="dots2" className="text-slate-400 font-bold px-1">...</span>
+                            );
+                          }
+
+                          pages.push(
+                            <button
+                              key={totalPages}
+                              onClick={() => setCurrentPage(totalPages)}
+                              className={`h-9 min-w-[36px] px-2 text-xs font-bold rounded-xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${currentPage === totalPages
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-600 text-white shadow-md'
+                                : 'bg-white/50 hover:bg-white/80 border-slate-200 text-slate-700 backdrop-blur-sm'
+                                }`}
+                            >
+                              {totalPages}
+                            </button>
+                          );
+                        }
+
+                        return pages;
+                      })()}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
+                    >
+                      <span className="tracking-wide uppercase text-xs">Next</span>
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="h-9 px-4 bg-white/10 hover:bg-white/20 text-slate-700 font-bold rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-slate-200 backdrop-blur-xl disabled:opacity-30 disabled:scale-100"
+                    >
+                      <span className="tracking-wide uppercase text-xs">Akhir</span>
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Gudang</label>
-                    <EditDropdown
-                      value={editingEntry.gudang}
-                      onChange={(value) => setEditingEntry({ ...editingEntry, gudang: value.trim() })}
-                      options={allGudangs}
-                      placeholder="Pilih atau ketik gudang..."
-                      loading={dropdownsLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Rak</label>
-                    <EditDropdown
-                      value={editingEntry.rak}
-                      onChange={(value) => {
-                        const trimmedValue = value.trimEnd();
-                        setEditingEntry({ ...editingEntry, rak: trimmedValue, sub_rak: trimmedValue });
-                      }}
-                      options={allRaks}
-                      placeholder="Pilih atau ketik rak..."
-                      loading={dropdownsLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Scan</label>
+                </div>
+              )}
+            </div>
+
+            <Modal isOpen={bulkEditMode === 'tanggal'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Tanggal">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900">
+                    Mengubah tanggal untuk <strong>{selectedIds.size} data</strong>
+                  </p>
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Baru</label>
+                  <div className="flex items-center space-x-2">
                     <input
                       type="date"
-                      value={editingEntry.tgl_scan}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, tgl_scan: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={bulkEditValue.includes('-') && bulkEditValue.length === 10 ? bulkEditValue : ''}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">User</label>
-                    <input
-                      type="text"
-                      value={editingEntry.user}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, user: e.target.value.trimEnd() })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sub Rak</label>
-                    <input
-                      type="text"
-                      value={editingEntry.sub_rak}
-                      onChange={(e) => {
-                        const trimmedValue = e.target.value.trimEnd();
-                        setEditingEntry({ ...editingEntry, sub_rak: trimmedValue, rak: trimmedValue });
+                    <button
+                      onClick={() => {
+                        setManualDateTarget('bulk_tanggal');
+                        setManualDateValue(bulkEditValue);
+                        setIsManualDateModalOpen(true);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                      className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-all border border-blue-200"
+                      title="Bulk Edit Manual (Support formats: DD/MM/YYYY, etc.)"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Log Update User</label>
-                    <input
-                      type="text"
-                      value={editingEntry.log_update_user}
-                      onChange={(e) => setEditingEntry({ ...editingEntry, log_update_user: e.target.value.trimEnd() })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                  {bulkEditValue && !bulkEditValue.includes('-') && (
+                    <div className="mt-1 text-xs text-blue-600 font-medium">
+                      Nilai Manual: {bulkEditValue}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <Button
-                    onClick={() => setIsEditModalOpen(false)}
+                    onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
                     className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
                   >
                     Batal
                   </Button>
                   <Button
-                    onClick={handleUpdateEntry}
+                    onClick={() => handleBulkUpdate('tgl', bulkEditValue)}
+                    disabled={!bulkEditValue || isBulkOperationLoading}
                     className="h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
                   >
-                    Update
+                    {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
                   </Button>
                 </div>
               </div>
             </Modal>
-          )}
+
+            <Modal isOpen={bulkEditMode === 'tgl_scan'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Tanggal Scan">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900">
+                    Mengubah <strong>Tanggal Scan</strong> untuk <strong>{selectedIds.size} data terpilih</strong>
+                  </p>
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Scan Baru</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="date"
+                      value={bulkEditValue.includes('-') && bulkEditValue.length === 10 ? bulkEditValue : ''}
+                      onChange={(e) => setBulkEditValue(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => {
+                        setManualDateTarget('bulk_tgl_scan');
+                        setManualDateValue(bulkEditValue);
+                        setIsManualDateModalOpen(true);
+                      }}
+                      className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all border border-indigo-200"
+                      title="Bulk Edit Manual (Support formats: DD/MM/YYYY, etc.)"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {bulkEditValue && !bulkEditValue.includes('-') && (
+                    <div className="mt-1 text-xs text-indigo-600 font-medium">
+                      Nilai Manual: {bulkEditValue}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
+                    className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkUpdate('tgl_scan', bulkEditValue)}
+                    disabled={!bulkEditValue || isBulkOperationLoading}
+                    className="h-10 px-6 bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(99,102,241,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
+                  >
+                    {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+
+            <Modal isOpen={bulkEditMode === 'gudang'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Gudang">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900">
+                    Mengubah gudang untuk <strong>{selectedIds.size} data</strong>
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Gudang Baru</label>
+                  <EditDropdown
+                    value={bulkEditValue}
+                    onChange={(value) => setBulkEditValue(value.trim())}
+                    options={allGudangs}
+                    placeholder="Pilih atau ketik gudang..."
+                    loading={dropdownsLoading}
+                  />
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }} variant="secondary">
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkUpdate('gudang', bulkEditValue)}
+                    variant="primary"
+                    disabled={!bulkEditValue || isBulkOperationLoading}
+                  >
+                    {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+
+            <Modal isOpen={bulkEditMode === 'user'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit User">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900">
+                    Mengubah user untuk <strong>{selectedIds.size} data</strong>
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">User Baru</label>
+                  <input
+                    type="text"
+                    value={bulkEditValue}
+                    onChange={(e) => setBulkEditValue(e.target.value.trimEnd())}
+                    placeholder="Masukkan nama user..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }} variant="secondary">
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkUpdate('user', bulkEditValue)}
+                    variant="primary"
+                    disabled={!bulkEditValue || isBulkOperationLoading}
+                  >
+                    {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+
+            <Modal isOpen={bulkEditMode === 'rak'} onClose={() => { setBulkEditMode(null); setBulkEditValue(''); }} title="Bulk Edit Rak & Sub Rak">
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900">
+                    Mengubah rak dan sub rak untuk <strong>{selectedIds.size} data</strong>
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Rak Baru (Sub Rak akan sama)</label>
+                  <EditDropdown
+                    value={bulkEditValue}
+                    onChange={(value) => setBulkEditValue(value.trimEnd())}
+                    options={allRaks}
+                    placeholder="Pilih atau ketik rak..."
+                    loading={dropdownsLoading}
+                  />
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    onClick={() => { setBulkEditMode(null); setBulkEditValue(''); }}
+                    className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkUpdate('rak', bulkEditValue)}
+                    disabled={!bulkEditValue || isBulkOperationLoading}
+                    className="h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
+                  >
+                    {isBulkOperationLoading ? 'Menyimpan...' : 'Update'}
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+
+            {editingEntry && (
+              <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Database Log Entry">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                      <input
+                        type="date"
+                        value={editingEntry.tgl}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, tgl: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Waktu</label>
+                      <input
+                        type="text"
+                        value={editingEntry.waktu}
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
+                      <EditDropdown
+                        value={editingEntry.sku}
+                        onChange={(value) => setEditingEntry({ ...editingEntry, sku: value.trimEnd() })}
+                        options={allSkus}
+                        placeholder="Pilih atau ketik SKU..."
+                        loading={dropdownsLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
+                      <input
+                        type="number"
+                        value={editingEntry.jumlah}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, jumlah: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                      <select
+                        value={editingEntry.type}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, type: e.target.value as 'IN' | 'OUT' | 'MOVE' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      >
+                        <option value="IN">IN</option>
+                        <option value="OUT">OUT</option>
+                        <option value="MOVE">MOVE</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Gudang</label>
+                      <EditDropdown
+                        value={editingEntry.gudang}
+                        onChange={(value) => setEditingEntry({ ...editingEntry, gudang: value.trim() })}
+                        options={allGudangs}
+                        placeholder="Pilih atau ketik gudang..."
+                        loading={dropdownsLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Rak</label>
+                      <EditDropdown
+                        value={editingEntry.rak}
+                        onChange={(value) => {
+                          const trimmedValue = value.trimEnd();
+                          setEditingEntry({ ...editingEntry, rak: trimmedValue, sub_rak: trimmedValue });
+                        }}
+                        options={allRaks}
+                        placeholder="Pilih atau ketik rak..."
+                        loading={dropdownsLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Scan</label>
+                      <input
+                        type="date"
+                        value={editingEntry.tgl_scan}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, tgl_scan: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">User</label>
+                      <input
+                        type="text"
+                        value={editingEntry.user}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, user: e.target.value.trimEnd() })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sub Rak</label>
+                      <input
+                        type="text"
+                        value={editingEntry.sub_rak}
+                        onChange={(e) => {
+                          const trimmedValue = e.target.value.trimEnd();
+                          setEditingEntry({ ...editingEntry, sub_rak: trimmedValue, rak: trimmedValue });
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Log Update User</label>
+                      <input
+                        type="text"
+                        value={editingEntry.log_update_user}
+                        onChange={(e) => setEditingEntry({ ...editingEntry, log_update_user: e.target.value.trimEnd() })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button
+                      onClick={() => setIsEditModalOpen(false)}
+                      className="h-10 px-6 bg-white/10 hover:bg-white/20 text-slate-600 font-bold rounded-xl shadow-sm transition-all border border-slate-200 backdrop-blur-xl"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      onClick={handleUpdateEntry}
+                      className="h-10 px-6 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md disabled:opacity-50"
+                    >
+                      Update
+                    </Button>
+                  </div>
+                </div>
+              </Modal>
+            )}
           </div>
         </div>
       ) : (
@@ -3194,6 +3187,12 @@ export function DatabaseLog() {
         moves={redistributeMoves}
         isProcessing={isProcessingRedistribution}
         onConfirm={handleExecuteRedistribute}
+      />
+      <Toast
+        isOpen={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={hideToast}
       />
     </>
   );

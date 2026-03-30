@@ -739,43 +739,65 @@ export function DataSKU() {
       />
 
       <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <Tag className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">MASTER DATA SKU</h1>
-              <p className="text-blue-100">Kelola data SKU dan informasi produk</p>
+        {/* PREMIUM IMMERSIVE HEADER (310px) */}
+        <div className="flex flex-col mb-8 lg:mb-12 uppercase">
+          <div className="bg-gradient-to-br from-rose-700 via-pink-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-rose-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
+            <div className="absolute -top-12 -right-12 text-white opacity-5">
+              <Tag className="w-72 h-72 lg:w-[480px] lg:h-[480px]" />
             </div>
-          </div>
-          <div className="flex space-x-3">
-            <Button
-              onClick={() => setIsUpdateModalOpen(true)}
-              className="h-11 px-6 bg-gradient-to-br from-indigo-500 to-violet-700 hover:from-indigo-600 hover:to-violet-800 text-white font-bold rounded-xl shadow-[0_4px_15px_rgba(99,102,241,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md"
-            >
-              <RefreshCcw className="h-5 w-5 mr-2" />
-              Update Massal
-            </Button>
-            <Button
-              onClick={handleImport}
-              className="h-11 px-6 bg-gradient-to-br from-orange-500 to-amber-700 hover:from-orange-600 hover:to-amber-800 text-white font-bold rounded-xl shadow-[0_4px_15px_rgba(245,158,11,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md"
-            >
-              <Upload className="h-5 w-5 mr-2" />
-              Import
-            </Button>
-            <Button
-              onClick={handleExport}
-              className="h-11 px-6 bg-gradient-to-br from-emerald-500 to-green-700 hover:from-emerald-600 hover:to-green-800 text-white font-bold rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              Export
-            </Button>
-            <Button
-              onClick={() => setIsFormOpen(true)}
-              className="h-11 px-6 bg-gradient-to-br from-emerald-500 to-green-700 hover:from-emerald-600 hover:to-green-800 text-white font-bold rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.3)] transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border border-white/20 backdrop-blur-md"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Tambah SKU
-            </Button>
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500/10 rounded-3xl rotate-45 blur-2xl"></div>
+            <div className="relative z-10 w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 uppercase text-left">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2 mb-3 lg:mb-4 opacity-90">
+                  <div className="w-10 h-[2px] bg-rose-400 rounded-full"></div>
+                  <span className="text-[10px] lg:text-[12px] font-black tracking-[0.4em] text-rose-100">Master Data Management</span>
+                </div>
+                <h1 className="text-[34px] lg:text-[54px] font-black text-white tracking-tighter leading-[0.9] mb-3 uppercase">
+                  Data <span className="text-rose-400">SKU</span>
+                </h1>
+                <div className="text-rose-100/80 font-medium text-[14px] lg:text-[18px] leading-relaxed max-w-[90%] normal-case flex items-center gap-3">
+                  <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                    </span>
+                    <span className="text-[11px] font-bold tracking-widest uppercase">{skus.length.toLocaleString()} Produk</span>
+                  </div>
+                  <span className="text-[13px] lg:text-[16px]">Kelola data SKU dan informasi produk</span>
+                </div>
+              </div>
+              <div className="relative z-10 flex flex-wrap gap-2 lg:gap-3 lg:mb-2 items-center">
+                <Button
+                  onClick={() => setIsUpdateModalOpen(true)}
+                  className="h-12 px-5 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/30 backdrop-blur-xl"
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                  <span className="uppercase text-[10px] font-black">Update Massal</span>
+                </Button>
+                <Button
+                  onClick={handleImport}
+                  className="h-12 px-5 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/30 backdrop-blur-xl"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="uppercase text-[10px] font-black">Import</span>
+                </Button>
+                <Button
+                  onClick={handleExport}
+                  className="h-12 px-5 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/30 backdrop-blur-xl"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="uppercase text-[10px] font-black">Export</span>
+                </Button>
+                <Button
+                  onClick={() => setIsFormOpen(true)}
+                  className="h-12 px-6 bg-white hover:bg-rose-50 text-rose-700 font-black rounded-2xl shadow-[0_8px_25px_rgba(255,255,255,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2.5 border-none"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="uppercase text-xs font-black">Tambah SKU</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
