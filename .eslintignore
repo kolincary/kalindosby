@@ -1,0 +1,6 @@
+node_modules
+dist
+.bolt
+supabase/migrations
+*.config.js
+vite-env.d.ts

@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom dropdown styles for better UX */
+select {
+  background-image: none !important;
+}
+
+/* Responsive dropdown positioning */
+@media (max-height: 600px) {
+  select {
+    transform: translateY(-100%);
+  }
+}
+
+/* Smooth transitions for dropdowns */
+select:focus {
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Custom scrollbar for long dropdown lists */
+select option {
+  padding: 8px 12px;
+  background-color: white;
+  color: #374151;
+}
+
+select option:hover {
+  background-color: #f3f4f6;
+}
+
+select option:checked {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
