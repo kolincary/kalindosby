@@ -288,49 +288,52 @@ export const DataKarantina: React.FC = () => {
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/20 blur-[120px] rounded-full z-0"></div>
 
             <div className="max-w-[1920px] mx-auto space-y-8 relative z-10">
-                {/* Header Section */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white/70 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-white/50">
-                    <div className="flex items-start gap-5">
-                        <div className="p-4 bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl shadow-lg shadow-orange-500/20 text-white">
-                            <AlertTriangle className="h-10 w-10" />
+                {/* PREMIUM IMMERSIVE HEADER (310px) - ORANGE */}
+                <div className="flex flex-col mb-8 lg:mb-12 uppercase">
+                    <div className="bg-gradient-to-br from-orange-700 via-amber-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-orange-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
+                        <div className="absolute -top-12 -right-12 text-white opacity-5">
+                            <AlertTriangle className="w-72 h-72 lg:w-[480px] lg:h-[480px]" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-3 mb-1.5">
-                                <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                                    Data <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500">Karantina</span>
+                        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-amber-500/10 rounded-3xl rotate-45 blur-2xl"></div>
+                        <div className="relative z-10 w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 uppercase text-left">
+                            <div className="max-w-2xl">
+                                <div className="flex items-center gap-2 mb-3 lg:mb-4 opacity-90">
+                                    <div className="w-10 h-[2px] bg-orange-400 rounded-full"></div>
+                                    <span className="text-[10px] lg:text-[12px] font-black tracking-[0.4em] text-orange-100">Monitoring Stok</span>
+                                </div>
+                                <h1 className="text-[34px] lg:text-[54px] font-black text-white tracking-tighter leading-[0.9] mb-3 uppercase">
+                                    Data <span className="text-orange-400">Karantina</span>
                                 </h1>
-                                <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-black uppercase tracking-widest border border-orange-100/50">
-                                    Validation Issues
-                                </span>
+                                <div className="text-orange-100/80 font-medium text-[14px] lg:text-[18px] leading-relaxed max-w-[90%] normal-case flex items-center gap-3">
+                                    <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                                        </span>
+                                        <span className="text-[11px] font-bold tracking-widest uppercase">{filteredRows.length} Item</span>
+                                    </div>
+                                    <span className="text-[13px] lg:text-[16px]">Data scan yang gagal validasi</span>
+                                </div>
                             </div>
-                            <p className="text-slate-500 text-sm md:text-base max-w-xl leading-relaxed font-medium">
-                                Penampungan data scan yang gagal validasi. Data disimpan di database untuk keamanan.
-                            </p>
+                            <div className="relative z-10 flex flex-wrap gap-2 lg:gap-3 lg:mb-2 items-center">
+                                <Button
+                                    onClick={fetchQuarantineItems}
+                                    className="h-12 px-5 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/30 backdrop-blur-xl"
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                    <span className="uppercase text-[10px] font-black">Refresh</span>
+                                </Button>
+                                <Button
+                                    onClick={() => setClearConfirm(true)}
+                                    className="h-12 px-6 bg-white hover:bg-orange-50 text-orange-700 font-black rounded-2xl shadow-[0_8px_25px_rgba(255,255,255,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2.5 border-none"
+                                    disabled={rows.length === 0}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="uppercase text-xs font-black">Hapus Semua</span>
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-[1.75rem] border-2 border-slate-200/60 shadow-sm flex flex-col items-center justify-center min-w-[140px]">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Item</span>
-                            <span className="text-3xl font-black text-orange-600 leading-none">{filteredRows.length}</span>
-                        </div>
-
-                        <Button
-                            onClick={fetchQuarantineItems}
-                            className="h-14 px-8 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-2xl shadow-sm border border-slate-200 transition-all active:scale-95 flex items-center justify-center gap-3"
-                        >
-                            <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
-                            <span className="tracking-widest uppercase text-xs">Refresh</span>
-                        </Button>
-
-                        <Button
-                            onClick={() => setClearConfirm(true)}
-                            className="h-14 px-8 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl shadow-sm border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-3"
-                            disabled={rows.length === 0}
-                        >
-                            <Trash2 className="h-5 w-5" />
-                            <span className="tracking-widest uppercase text-xs">Hapus Semua</span>
-                        </Button>
                     </div>
                 </div>
 

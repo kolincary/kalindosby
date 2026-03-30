@@ -237,41 +237,45 @@ export const StokMinus: React.FC = () => {
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/20 blur-[120px] rounded-full z-0"></div>
 
             <div className="max-w-[1920px] mx-auto space-y-8 relative z-10">
-                {/* Header Section */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white/70 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-white/50">
-                    <div className="flex items-start gap-5">
-                        <div className="p-4 bg-gradient-to-br from-red-500 to-rose-500 rounded-3xl shadow-lg shadow-red-500/20 text-white">
-                            <RefreshCw className="h-10 w-10" />
+                {/* PREMIUM IMMERSIVE HEADER (310px) - RED */}
+                <div className="flex flex-col mb-8 lg:mb-12 uppercase">
+                    <div className="bg-gradient-to-br from-red-700 via-rose-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-red-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
+                        <div className="absolute -top-12 -right-12 text-white opacity-5">
+                            <RefreshCw className="w-72 h-72 lg:w-[480px] lg:h-[480px]" />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-3 mb-1.5">
-                                <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                                    Stok <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-500">Minus</span>
+                        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-rose-500/10 rounded-3xl rotate-45 blur-2xl"></div>
+                        <div className="relative z-10 w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 uppercase text-left">
+                            <div className="max-w-2xl">
+                                <div className="flex items-center gap-2 mb-3 lg:mb-4 opacity-90">
+                                    <div className="w-10 h-[2px] bg-red-400 rounded-full"></div>
+                                    <span className="text-[10px] lg:text-[12px] font-black tracking-[0.4em] text-red-100">Monitoring Stok</span>
+                                </div>
+                                <h1 className="text-[34px] lg:text-[54px] font-black text-white tracking-tighter leading-[0.9] mb-3 uppercase">
+                                    Stok <span className="text-red-400">Minus</span>
                                 </h1>
-                                <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-black uppercase tracking-widest border border-red-100/50 animate-bounce-subtle">
-                                    Action Required
-                                </span>
+                                <div className="text-red-100/80 font-medium text-[14px] lg:text-[18px] leading-relaxed max-w-[90%] normal-case flex items-center gap-3">
+                                    <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                        </span>
+                                        <span className="text-[11px] font-bold tracking-widest uppercase">{filteredRows.length} Temuan</span>
+                                    </div>
+                                    <span className="text-[13px] lg:text-[16px]">Barang keluar yang melampaui stok tersedia</span>
+                                </div>
                             </div>
-                            <p className="text-slate-500 text-sm md:text-base max-w-xl leading-relaxed font-medium">
-                                Manajemen kritis barang keluar yang melampaui stok tersedia. Segera lakukan penyesuaian untuk menjaga akurasi inventaris.
-                            </p>
+                            <div className="relative z-10 flex flex-wrap gap-2 lg:gap-3 lg:mb-2 items-center">
+                                <Button
+                                    onClick={loadMinusStockData}
+                                    className="h-12 px-6 bg-white hover:bg-red-50 text-red-700 font-black rounded-2xl shadow-[0_8px_25px_rgba(255,255,255,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2.5 border-none"
+                                    disabled={loading}
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                    <span className="uppercase text-xs font-black">{loading ? 'Loading...' : 'Refresh'}</span>
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="bg-white/80 backdrop-blur-md px-6 py-4 rounded-[1.75rem] border-2 border-slate-200/60 shadow-sm flex flex-col items-center justify-center min-w-[140px]">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Temuan</span>
-                            <span className="text-3xl font-black text-red-600 leading-none">{filteredRows.length}</span>
-                        </div>
-
-                        <Button
-                            onClick={loadMinusStockData}
-                            className="h-14 px-8 bg-gradient-to-br from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-black rounded-2xl shadow-lg shadow-red-500/30 transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-3 border border-white/20 group"
-                            disabled={loading}
-                        >
-                            <RefreshCw className={`h-5 w-5 transition-transform duration-700 ${loading ? 'animate-spin' : 'group-hover:rotate-180'}`} />
-                            <span className="tracking-widest uppercase text-xs">{loading ? 'Loading...' : 'Refresh Data'}</span>
-                        </Button>
                     </div>
                 </div>
 

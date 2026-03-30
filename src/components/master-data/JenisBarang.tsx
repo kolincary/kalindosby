@@ -164,26 +164,26 @@ export function JenisBarang() {
       <div className="space-y-6">
         {/* PREMIUM IMMERSIVE HEADER (310px) */}
         <div className="flex flex-col mb-8 lg:mb-12 uppercase">
-          <div className="bg-gradient-to-br from-emerald-700 via-teal-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-emerald-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
+          <div className="bg-gradient-to-br from-blue-700 via-indigo-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-blue-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
             <div className="absolute -top-12 -right-12 text-white opacity-5">
               <Package2 className="w-72 h-72 lg:w-[480px] lg:h-[480px]" />
             </div>
-            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-teal-500/10 rounded-3xl rotate-45 blur-2xl"></div>
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-indigo-500/10 rounded-3xl rotate-45 blur-2xl"></div>
             <div className="relative z-10 w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 uppercase text-left">
               <div className="max-w-2xl">
                 <div className="flex items-center gap-2 mb-3 lg:mb-4 opacity-90">
-                  <div className="w-10 h-[2px] bg-emerald-400 rounded-full"></div>
-                  <span className="text-[10px] lg:text-[12px] font-black tracking-[0.4em] text-emerald-100">Master Data Management</span>
+                  <div className="w-10 h-[2px] bg-blue-400 rounded-full"></div>
+                  <span className="text-[10px] lg:text-[12px] font-black tracking-[0.4em] text-blue-100">Master Data Management</span>
                 </div>
                 <h1 className="text-[34px] lg:text-[54px] font-black text-white tracking-tighter leading-[0.9] mb-3 uppercase">
-                  Jenis <span className="text-emerald-400">Barang</span>
+                  Jenis <span className="text-blue-400">Barang</span>
                 </h1>
-                <div className="text-emerald-100/80 font-medium text-[14px] lg:text-[18px] leading-relaxed max-w-[90%] normal-case flex items-center gap-3">
+                <div className="text-blue-100/80 font-medium text-[14px] lg:text-[18px] leading-relaxed max-w-[90%] normal-case flex items-center gap-3">
                   <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                     </span>
                     <span className="text-[11px] font-bold tracking-widest uppercase">{productTypes.length} Kategori</span>
                   </div>
@@ -193,7 +193,7 @@ export function JenisBarang() {
               <div className="relative z-10 flex flex-wrap gap-2 lg:gap-3 lg:mb-2 items-center">
                 <Button
                   onClick={() => setIsFormOpen(true)}
-                  className="h-12 px-6 bg-white hover:bg-emerald-50 text-emerald-700 font-black rounded-2xl shadow-[0_8px_25px_rgba(255,255,255,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2.5 border-none"
+                  className="h-12 px-6 bg-white hover:bg-blue-50 text-blue-700 font-black rounded-2xl shadow-[0_8px_25px_rgba(255,255,255,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2.5 border-none"
                 >
                   <Plus className="h-4 w-4" />
                   <span className="uppercase text-xs font-black">Tambah Jenis</span>
