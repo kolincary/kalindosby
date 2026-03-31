@@ -404,38 +404,57 @@ export function InputBarangKeluar() {
         }
     };
 
-    const handleScanModalSave = () => {
+    const handleScanModalSave = async () => {
         const sku = scanModalSku.trim();
         if (!sku) return;
         const qty = parseInt(scanModalQty) || 0;
 
+        // Cek stok yang tersedia sebelum dimasukkan ke dalam baris agar tidak 0
+        const stokTersedia = await calculateAvailableStock(sku, scanModalRak || '');
+        const stockItem = stockItems.find(item => item.nama_produk?.toLowerCase().trim() === sku.toLowerCase().trim());
+        let packingData = '';
+        if (stockItem && stockItem.packing && stockItem.packing.trim() !== '' && stockItem.packing.trim() !== 'CTN/') {
+            packingData = stockItem.packing;
+        }
+
         const emptyRowIndex = rows.findIndex(r => !r.nama_produk);
         if (emptyRowIndex !== -1) {
-            setRows(prevRows => prevRows.map((r, i) => i === emptyRowIndex ? {
-                ...r,
-                nama_produk: sku,
-                rak: scanModalRak || r.rak,
-                tgl_scan: scanModalTglScan || r.tgl_scan,
-                jumlah: qty > 0 ? qty : r.jumlah,
-                is_scanned: true
-            } : r));
+            setRows(prevRows => prevRows.map((r, i) => {
+                if (i === emptyRowIndex) {
+                    const finalJumlah = qty > 0 ? qty : r.jumlah;
+                    return {
+                        ...r,
+                        nama_produk: sku,
+                        rak: scanModalRak || r.rak,
+                        tgl_scan: scanModalTglScan || r.tgl_scan,
+                        jumlah: finalJumlah,
+                        stok_tersedia: stokTersedia,
+                        total_stok: calculateTotalStock(stokTersedia, finalJumlah),
+                        packing: packingData || r.packing,
+                        is_scanned: true
+                    };
+                }
+                return r;
+            }));
             showToast(`SKU ${sku} berhasil dimasukkan.`, 'success');
         } else {
             const firstRowGudang = rows.length > 0 ? rows[0].gudang : '';
+            const jumlahAkhir = qty > 0 ? qty : 1;
             const newRow: TransactionRow = {
                 id: 'id-' + Date.now().toString() + '_' + Math.random(),
                 tanggal: currentDate,
                 waktu: formatTimeWithSeconds(new Date()),
                 nama_produk: sku,
-                jumlah: qty > 0 ? qty : 1,
+                jumlah: jumlahAkhir,
                 type: 'OUT',
                 gudang: firstRowGudang,
                 rak: scanModalRak,
                 sub_rak: '',
                 tgl_scan: scanModalTglScan,
                 user_name: userEmail?.split('@')[0] || '',
-                stok_tersedia: 0,
-                total_stok: 0,
+                stok_tersedia: stokTersedia,
+                total_stok: calculateTotalStock(stokTersedia, jumlahAkhir),
+                packing: packingData,
                 is_scanned: true,
             };
             setRows(prev => [...prev, newRow]);
