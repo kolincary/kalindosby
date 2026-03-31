@@ -1198,6 +1198,13 @@ export function RiwayatBarang() {
                   FIX DATE FORMAT
                 </button>
               )}
+              <button
+                onClick={exportDataStandard}
+                className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 text-[10px] font-black rounded-xl shadow-lg transition-all border-none flex items-center gap-2 tracking-widest active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                EXPORT
+              </button>
             </div>
           </div>
         </div>
