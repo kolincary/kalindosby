@@ -231,12 +231,12 @@ export const StokMinus: React.FC = () => {
     }, [rows]);
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] p-4 md:p-6 lg:p-10 font-sans text-slate-800 relative overflow-hidden">
+        <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-800 relative overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-100/30 blur-[120px] rounded-full z-0 animate-pulse"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/20 blur-[120px] rounded-full z-0"></div>
 
-            <div className="max-w-[1920px] mx-auto space-y-8 relative z-10">
+            <div className="max-w-[1920px] mx-auto relative z-10">
                 {/* PREMIUM IMMERSIVE HEADER (310px) - RED */}
                 <div className="flex flex-col mb-8 lg:mb-12 uppercase">
                     <div className="bg-gradient-to-br from-red-700 via-rose-800 to-slate-900 -mx-3 lg:-mx-8 pt-[90px] lg:pt-0 lg:h-[310px] pb-[75px] lg:pb-0 px-6 lg:px-12 rounded-b-[40px] lg:rounded-b-[55px] shadow-2xl shadow-red-900/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-center">
@@ -280,7 +280,7 @@ export const StokMinus: React.FC = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="space-y-6">
+                <div className="p-4 md:p-6 lg:p-10 space-y-6">
                     {/* Search Bar */}
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1 group">

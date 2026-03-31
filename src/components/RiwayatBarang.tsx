@@ -350,7 +350,8 @@ export function RiwayatBarang() {
     type: '',
     inisial_gudang: '',
     rak: '',
-    tanggal_scan: ''
+    tanggal_scan: '',
+    hanya_penyesuaian: false
   });
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
     currentPage: 1,
@@ -755,6 +756,9 @@ export function RiwayatBarang() {
           query = query.or(scanFormats.map(format => `tgl_scan.like.%${format}%`).join(','));
         }
       }
+      if (filters.hanya_penyesuaian) {
+        query = query.eq('is_adjustment', true);
+      }
 
       // Apply sorting and pagination AFTER all filters
       query = query
@@ -838,6 +842,7 @@ export function RiwayatBarang() {
           query = query.or(scanFormats.map(format => `tgl_scan.like.%${format}%`).join(','));
         }
       }
+      if (filters.hanya_penyesuaian) query = query.eq('is_adjustment', true);
 
       // Apply sorting and pagination AFTER all filters
       query = query
@@ -1077,7 +1082,8 @@ export function RiwayatBarang() {
       type: '',
       inisial_gudang: '',
       rak: '',
-      tanggal_scan: ''
+      tanggal_scan: '',
+      hanya_penyesuaian: false
     });
     setBarangSearchTerm('');
     setGudangSearchTerm('');
@@ -1607,6 +1613,42 @@ export function RiwayatBarang() {
                   </select>
                 </div>
 
+                {/* ⭐ FILTER PENYESUAIAN - SPECIAL AMBER */}
+                <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none" htmlFor="filter-penyesuaian">
+                      <div className="flex items-center gap-1.5">
+                        <Tag className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-800">Penyesuaian</span>
+                      </div>
+                      <span className="px-2 py-0.5 bg-amber-400 text-white text-[9px] font-black rounded-full tracking-widest uppercase">SPECIAL</span>
+                    </label>
+                    <button
+                      id="filter-penyesuaian"
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, hanya_penyesuaian: !prev.hanya_penyesuaian }));
+                        setCurrentPage(1);
+                      }}
+                      className={`relative w-12 h-6 rounded-full transition-all duration-300 ${filters.hanya_penyesuaian
+                        ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                        : 'bg-gray-200'
+                        }`}
+                    >
+                      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${filters.hanya_penyesuaian ? 'left-6' : 'left-0.5'
+                        }`} />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-amber-700 mt-2 font-medium leading-snug">
+                    Tampilkan hanya data yang ditandai sebagai <strong>Penyesuaian Stok</strong> (is_adjustment)
+                  </p>
+                  {filters.hanya_penyesuaian && (
+                    <div className="mt-2 flex items-center gap-1.5 text-amber-800 bg-amber-100 rounded-lg px-2 py-1">
+                      <Tag className="w-3 h-3 shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Filter Aktif</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="pt-4 mt-2 border-t border-gray-100">
                   <Button
                     onClick={clearAll}
@@ -1867,7 +1909,8 @@ export function RiwayatBarang() {
               type: '',
               inisial_gudang: '',
               rak: '',
-              tanggal_scan: ''
+              tanggal_scan: '',
+              hanya_penyesuaian: false
             });
             setBarangSearchTerm('');
             setGudangSearchTerm('');
