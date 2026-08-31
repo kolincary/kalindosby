@@ -275,12 +275,13 @@ export const calculateAccurateStock = async (namaProduk: string, rak: string): P
       .limit(1)
       .maybeSingle();
 
-    if (stockItem.error) {
-      console.error(`❌ Error fetching stock item for ${namaProduk} @ ${rak}:`, stockItem.error);
-      // Don't return 0 yet, try to continue with log calculation
+    if (stockItem.error || !stockItem.data) {
+      // Jika item tidak terdaftar atau tidak aktif di stock_items (Data Gudang),
+      // stok tersedia bernilai 0 dan tidak menghitung log riwayat orphan.
+      return 0;
     }
 
-    const stokAwal = stockItem.data?.stok_awal || 0;
+    const stokAwal = stockItem.data.stok_awal || 0;
 
     const { data: logData, error: logError } = await supabase
       .from('database_log')

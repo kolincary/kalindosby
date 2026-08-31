@@ -12,8 +12,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// Menyambungkan secara spesifik ke database 'stock-lt3', bukan '(default)'
 import { initializeFirestore } from 'firebase/firestore';
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
-}, "stock-lt3");
+});

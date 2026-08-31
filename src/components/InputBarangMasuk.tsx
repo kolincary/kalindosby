@@ -115,7 +115,7 @@ const saveDropdownCache = (key: string, data: string[]) => {
 };
 
 export function InputBarangMasuk() {
-    const { writeMode } = useDatabaseConfig();
+    const { readMode, writeMode } = useDatabaseConfig();
     const { userEmail } = useAuth();
     // Format date as dd/mm/yyyy
     const formatDateDDMMYYYY = (date: Date): string => {
@@ -172,22 +172,12 @@ export function InputBarangMasuk() {
     // Load rack locations on component mount
     React.useEffect(() => {
         loadRackLocations();
-    }, []);
+    }, [readMode]);
 
     const loadRackLocations = async () => {
         try {
-            const { data, error } = await supabase
-                .from('rack_locations')
-                .select('id, nama, tampil_di_menu, status')
-                .eq('status', 'Aktif')
-                .order('nama', { ascending: true });
-
-            if (error) {
-                console.error('Error loading rack locations:', error);
-                return;
-            }
-
-            setRackLocations(data || []);
+            const data = await DatabaseService.fetchActiveRacks(readMode);
+            setRackLocations((data as any[]) || []);
         } catch (error) {
             console.error('Error loading rack locations:', error);
         }
@@ -443,22 +433,21 @@ export function InputBarangMasuk() {
         try {
             setDropdownLoading(true);
 
-            const [productsResult, warehousesData, racksData] = await Promise.all([
-                fetchAllProducts(undefined, true),
-                fetchPaginatedData('warehouses', 'nama, tampil_di_menu', 'nama', 'status', 'Aktif'),
-                fetchPaginatedData('rack_locations', 'nama, tampil_di_menu', 'nama', 'status', 'Aktif')
+            const [productsData, warehousesData, racksData] = await Promise.all([
+                DatabaseService.fetchActiveProducts(readMode),
+                DatabaseService.fetchActiveWarehouses(readMode),
+                DatabaseService.fetchActiveRacks(readMode)
             ]);
 
-            const productsData = Array.isArray(productsResult.data) ? productsResult.data : [];
-            const fetchedProducts = productsData.map((item: any) => item.nama).filter(Boolean);
+            const fetchedProducts = (productsData || []).map((item: any) => item.nama || item.sku_code).filter(Boolean);
             const uniqueProducts = [...new Set(fetchedProducts)].sort();
 
-            const filteredWarehouses = warehousesData.filter(item =>
+            const filteredWarehouses = (warehousesData || []).filter((item: any) =>
                 item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_MASUK'
             );
             const warehouseNames = filteredWarehouses.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            const filteredRacks = racksData.filter((item: any) =>
+            const filteredRacks = (racksData || []).filter((item: any) =>
                 item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_MASUK'
             );
             const rackNames = filteredRacks.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
@@ -471,7 +460,7 @@ export function InputBarangMasuk() {
             saveDropdownCache(RACKS_CACHE_KEY, rackNames);
 
             console.log("🔄 Fetching fresh stock data from database...");
-            const stockResult = await fetchAllStockItems();
+            const stockResult = await DatabaseService.fetchAllStockItems(readMode);
             const newStockItems = stockResult.data || [];
             setStockItems(newStockItems);
 
@@ -480,34 +469,32 @@ export function InputBarangMasuk() {
             newStockItems.forEach((item: any) => {
                 if (item.nama_produk && item.rak) {
                     const key = `${item.nama_produk.toLowerCase().trim()}|${item.rak.toLowerCase().trim()}`;
-                    stockMap.set(key, item.tersedia || 0);
+                    stockMap.set(key, Number(item.tersedia) || 0);
                 }
             });
 
             console.log("✅ Stock data refreshed, force updating all rows with fresh stock...");
             setRows(prevRows => prevRows.map(row => {
-                if (row.nama_produk && row.rak) {
-                    const key = `${row.nama_produk.toLowerCase().trim()}|${row.rak.toLowerCase().trim()}`;
-                    const stokTersedia = stockMap.get(key) || 0;
+                const hasBoth = row.nama_produk && row.rak;
+                const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
+                const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
 
-                    return {
-                        ...row,
-                        stok_tersedia: stokTersedia,
-                        total_stok: calculateTotalStock(stokTersedia, row.jumlah)
-                    };
-                }
-                return row;
+                return {
+                    ...row,
+                    stok_tersedia: stokTersedia,
+                    total_stok: calculateTotalStock(stokTersedia, row.jumlah)
+                };
             }));
 
         } catch (error) {
-            console.error('Error syncing all data from Supabase:', error);
+            console.error('Error syncing all data from database:', error);
             showToast('Gagal sinkronisasi data dari database', 'error');
         } finally {
             setDropdownLoading(false);
         }
     };
 
-    // Load dropdown data from Supabase or cache and setup real-time listeners
+    // Load dropdown data from DatabaseService or cache and setup real-time listeners
     useEffect(() => {
         const loadAndSyncData = async () => {
             try {
@@ -518,14 +505,9 @@ export function InputBarangMasuk() {
                 const cachedRacks = loadDropdownCache(RACKS_CACHE_KEY);
 
                 if (cachedProducts.length > 0 && cachedWarehouses.length > 0 && cachedRacks.length > 0) {
-                    console.log('✓ Dropdown data loaded from cache');
                     setValidProducts(cachedProducts);
                     setValidWarehouses(cachedWarehouses);
                     setValidRacks(cachedRacks);
-                    // showToast(`Data produk, gudang, dan rak siap!`, 'info'); // Commented out to reduce initial toast
-                } else {
-                    console.log('No cache found, loading from Supabase...');
-                    showToast('Memuat data dari database...', 'info');
                 }
 
                 await syncDropdownData();
@@ -539,6 +521,7 @@ export function InputBarangMasuk() {
         };
 
         const setupRealtimeSubscriptions = () => {
+            if (readMode !== 'supabase') return () => {};
             const channel = supabase.channel('realtime-tables-input-masuk');
             let syncTimer: NodeJS.Timeout | null = null;
             let isUpdating = false;
@@ -553,7 +536,7 @@ export function InputBarangMasuk() {
                 console.log('⚡ Realtime: Syncing stock data...');
 
                 try {
-                    const stockResult = await fetchAllStockItems();
+                    const stockResult = await DatabaseService.fetchAllStockItems(readMode);
                     const freshStock = stockResult.data || [];
                     setStockItems(freshStock);
 
@@ -562,23 +545,21 @@ export function InputBarangMasuk() {
                     freshStock.forEach((item: any) => {
                         if (item.nama_produk && item.rak) {
                             const key = `${item.nama_produk.toLowerCase().trim()}|${item.rak.toLowerCase().trim()}`;
-                            stockMap.set(key, item.tersedia || 0);
+                            stockMap.set(key, Number(item.tersedia) || 0);
                         }
                     });
 
                     setRows(prevRows => {
                         return prevRows.map(row => {
-                            if (row.nama_produk && row.rak) {
-                                const key = `${row.nama_produk.toLowerCase().trim()}|${row.rak.toLowerCase().trim()}`;
-                                const stokTersedia = stockMap.get(key) || 0;
+                            const hasBoth = row.nama_produk && row.rak;
+                            const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
+                            const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
 
-                                return {
-                                    ...row,
-                                    stok_tersedia: stokTersedia,
-                                    total_stok: calculateTotalStock(stokTersedia, row.jumlah)
-                                };
-                            }
-                            return row;
+                            return {
+                                ...row,
+                                stok_tersedia: stokTersedia,
+                                total_stok: calculateTotalStock(stokTersedia, row.jumlah)
+                            };
                         });
                     });
 
@@ -615,7 +596,7 @@ export function InputBarangMasuk() {
         return () => {
             unsubscribe();
         };
-    }, []);
+    }, [readMode]);
 
 
     const addRow = () => {
@@ -680,8 +661,9 @@ export function InputBarangMasuk() {
         setDeleteConfirm({ isOpen: false, itemId: '', itemName: '' });
     };
 
-    // Function to calculate available stock from real-time Supabase data
+    // Function to calculate available stock from real-time database data
     const calculateAvailableStock = async (namaProduk: string, rak: string): Promise<number> => {
+        if (!namaProduk || !rak) return 0;
         try {
             // First check if we have it in our current state (fastest)
             const cachedItem = stockItems.find(s =>
@@ -689,22 +671,9 @@ export function InputBarangMasuk() {
                 s.rak?.toLowerCase().trim() === rak.toLowerCase().trim()
             );
 
-            if (cachedItem) return cachedItem.tersedia;
+            if (cachedItem) return cachedItem.tersedia || 0;
 
-            // If not in cache, fetch fresh from DB
-            const { data, error } = await supabase
-                .from('stock_items')
-                .select('tersedia')
-                .eq('nama_produk', namaProduk)
-                .eq('rak', rak)
-                .maybeSingle();
-
-            if (error) {
-                console.error('Error fetching accurate stock:', error);
-                return 0;
-            }
-
-            return data?.tersedia || 0;
+            return await DatabaseService.calculateAccurateStock(namaProduk, rak, readMode);
         } catch (err) {
             console.error('Unexpected error calculating stock:', err);
             return 0;

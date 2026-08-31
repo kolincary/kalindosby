@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, calculateAccurateStock } from './supabase';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, doc, setDoc, writeBatch, deleteDoc, getDoc, increment } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -458,8 +458,93 @@ export const DatabaseService = {
       const colRef = collection(db, STOCK_COLLECTION);
       const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return { data, count: data.length };
+    }
+  },
+
+  async calculateAccurateStock(namaProduk: string, rak: string, mode: DatabaseReadMode = 'supabase'): Promise<number> {
+    if (!namaProduk.trim() || !rak.trim()) {
+      return 0;
+    }
+
+    if (mode === 'supabase') {
+      return await calculateAccurateStock(namaProduk, rak);
+    } else {
+      try {
+        const colRef = collection(db, STOCK_COLLECTION);
+        const q = firestoreQuery(
+          colRef,
+          where('nama_produk', '==', namaProduk.trim()),
+          where('rak', '==', rak.trim()),
+          where('status', '==', 'Aktif')
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+          return 0;
+        }
+
+        const stockItem = snapshot.docs[0].data();
+        const stokAwal = Number(stockItem.stok_awal) || 0;
+
+        // Fetch logs from Firestore
+        const logRef = collection(db, COLLECTION_NAME);
+        const logQ = firestoreQuery(logRef, where('sku', '==', namaProduk.trim()));
+        const logSnap = await getDocs(logQ);
+        const logEntries = logSnap.docs.map(d => d.data());
+
+        const targetRakLower = rak.trim().toLowerCase();
+        const itemLogs = logEntries.filter(l => 
+          (l.rak || '').toString().trim().toLowerCase() === targetRakLower
+        );
+
+        const masuk = itemLogs
+          .filter(l => l.type === 'IN')
+          .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
+
+        const keluar = itemLogs
+          .filter(l => l.type === 'OUT')
+          .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
+
+        return stokAwal + masuk - keluar;
+      } catch (err) {
+        console.error('Error calculating accurate stock in Firebase:', err);
+        return 0;
+      }
+    }
+  },
+
+  async fetchActiveRacks(mode: DatabaseReadMode = 'supabase') {
+    if (mode === 'supabase') {
+      const { data, error } = await supabase
+        .from('rack_locations')
+        .select('id, nama, tampil_di_menu, status, auto_fill_scanner')
+        .eq('status', 'Aktif')
+        .order('nama', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } else {
+      const colRef = collection(db, 'rack_locations');
+      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+  },
+
+  async fetchActiveWarehouses(mode: DatabaseReadMode = 'supabase') {
+    if (mode === 'supabase') {
+      const { data, error } = await supabase
+        .from('warehouses')
+        .select('id, nama, tampil_di_menu, status')
+        .eq('status', 'Aktif')
+        .order('nama', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } else {
+      const colRef = collection(db, 'warehouses');
+      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
     }
   },
 

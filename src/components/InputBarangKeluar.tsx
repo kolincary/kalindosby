@@ -221,7 +221,7 @@ const saveDropdownCache = (key: string, data: string[]) => {
     }
 };
 export function InputBarangKeluar() {
-    const { writeMode } = useDatabaseConfig();
+    const { readMode, writeMode } = useDatabaseConfig();
     const { userEmail, userDetails, isGuest, loading } = useAuth();
     const formatDateDDMMYYYY = (date: Date): string => {
         const day = date.getDate().toString().padStart(2, '0');
@@ -700,19 +700,11 @@ export function InputBarangKeluar() {
     }, []); // Empty dependency array, effect runs only once
     useEffect(() => {
         loadRackLocations();
-    }, []);
+    }, [readMode]);
     const loadRackLocations = async () => {
         try {
-            const { data, error } = await supabase
-                .from('rack_locations')
-                .select('id, nama, tampil_di_menu, status, auto_fill_scanner')
-                .eq('status', 'Aktif')
-                .order('nama', { ascending: true });
-            if (error) {
-                console.error('Error loading rack locations:', error);
-                return;
-            }
-            setRackLocations(data || []);
+            const data = await DatabaseService.fetchActiveRacks(readMode);
+            setRackLocations((data as any[]) || []);
         } catch (error) {
             console.error('Error loading rack locations:', error);
         }
@@ -885,6 +877,17 @@ export function InputBarangKeluar() {
         const loadAndSyncData = async () => {
             try {
                 setDropdownLoading(true);
+                // Load from cache first
+                const cachedProducts = loadDropdownCache(PRODUCTS_CACHE_KEY);
+                const cachedWarehouses = loadDropdownCache(WAREHOUSES_CACHE_KEY);
+                const cachedRacks = loadDropdownCache(RACKS_CACHE_KEY);
+
+                if (cachedProducts.length > 0 && cachedWarehouses.length > 0 && cachedRacks.length > 0) {
+                    setValidProducts(cachedProducts);
+                    setValidWarehouses(cachedWarehouses);
+                    setValidRacks(cachedRacks);
+                }
+
                 await syncDropdownData();
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -893,18 +896,17 @@ export function InputBarangKeluar() {
             }
         };
         const setupRealtimeSubscriptions = () => {
+            if (readMode !== 'supabase') return () => {};
             const channel = supabase.channel('realtime-tables-input-keluar');
             let syncTimer: NodeJS.Timeout | null = null;
             let isUpdating = false;
             const debouncedUpdate = async () => {
                 if (isUpdating) {
-                    console.log('⏳ Update already in progress, skipping...');
                     return;
                 }
                 isUpdating = true;
-                console.log('⚡ Realtime: Syncing stock data...');
                 try {
-                    const stockResult = await fetchAllStockItems();
+                    const stockResult = await DatabaseService.fetchAllStockItems(readMode);
                     const freshStock = stockResult.data || [];
                     setStockItems(freshStock);
 
@@ -912,26 +914,23 @@ export function InputBarangKeluar() {
                     freshStock.forEach((item: any) => {
                         if (item.nama_produk && item.rak) {
                             const key = `${item.nama_produk.toLowerCase().trim()}|${item.rak.toLowerCase().trim()}`;
-                            stockMap.set(key, item.tersedia || 0);
+                            stockMap.set(key, Number(item.tersedia) || 0);
                         }
                     });
 
                     setRows(prevRows => {
                         return prevRows.map(row => {
-                            if (row.nama_produk && row.rak) {
-                                const key = `${row.nama_produk.toLowerCase().trim()}|${row.rak.toLowerCase().trim()}`;
-                                const stokTersedia = stockMap.get(key) || 0;
-                                return {
-                                    ...row,
-                                    stok_tersedia: stokTersedia,
-                                    total_stok: calculateTotalStock(stokTersedia, row.jumlah)
-                                };
-                            }
-                            return row;
+                            const hasBoth = row.nama_produk && row.rak;
+                            const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
+                            const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
+                            return {
+                                ...row,
+                                stok_tersedia: stokTersedia,
+                                total_stok: calculateTotalStock(stokTersedia, row.jumlah)
+                            };
                         });
                     });
 
-                    showToast('Stok diperbarui secara real-time', 'info');
                     isUpdating = false;
                 } catch (err) {
                     console.error('❌ Error updating stock:', err);
@@ -939,13 +938,11 @@ export function InputBarangKeluar() {
                 }
             };
             channel
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' }, (payload) => {
-                    console.log('🔔 Real-time stock_items change detected:', payload.eventType);
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_items' }, () => {
                     if (syncTimer) clearTimeout(syncTimer);
                     syncTimer = setTimeout(debouncedUpdate, 1500);
                 })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'database_log' }, (payload) => {
-                    console.log('🔔 Real-time database_log change detected:', payload.eventType);
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'database_log' }, () => {
                     if (syncTimer) clearTimeout(syncTimer);
                     syncTimer = setTimeout(debouncedUpdate, 1500);
                 })
@@ -960,28 +957,28 @@ export function InputBarangKeluar() {
         return () => {
             unsubscribe();
         };
-    }, []);
+    }, [readMode]);
     const syncDropdownData = async () => {
         try {
             setDropdownLoading(true);
-            const [productsResult, warehousesData, racksData] = await Promise.all([
-                fetchAllProducts(undefined, true),
-                fetchPaginatedData('warehouses', 'nama, tampil_di_menu', 'nama', 'status', 'Aktif'),
-                fetchPaginatedData('rack_locations', 'nama, tampil_di_menu', 'nama', 'status', 'Aktif')
+            const [productsData, warehousesData, racksData] = await Promise.all([
+                DatabaseService.fetchActiveProducts(readMode),
+                DatabaseService.fetchActiveWarehouses(readMode),
+                DatabaseService.fetchActiveRacks(readMode)
             ]);
 
-            const fetchedProducts = (productsResult.data as any[] || []).map(item => item.nama).filter(Boolean);
+            const fetchedProducts = (productsData || []).map((item: any) => item.nama || item.sku_code).filter(Boolean);
             const uniqueProducts = [...new Set(fetchedProducts)].sort();
 
-            const filteredWarehouses = warehousesData.filter(item =>
+            const filteredWarehouses = (warehousesData || []).filter((item: any) =>
                 item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_KELUAR'
             );
-            const warehouseNames = filteredWarehouses.map(item => item.nama).filter(name => name && name.trim() !== '');
+            const warehouseNames = filteredWarehouses.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            const filteredRacks = racksData.filter(item =>
+            const filteredRacks = (racksData || []).filter((item: any) =>
                 item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_KELUAR'
             );
-            const rackNames = filteredRacks.map(item => item.nama).filter(name => name && name.trim() !== '');
+            const rackNames = filteredRacks.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
             setValidProducts(uniqueProducts);
             setValidWarehouses(warehouseNames);
@@ -991,7 +988,7 @@ export function InputBarangKeluar() {
             saveDropdownCache(RACKS_CACHE_KEY, rackNames);
 
             console.log("🔄 Fetching fresh stock data from database...");
-            const stockResult = await fetchAllStockItems();
+            const stockResult = await DatabaseService.fetchAllStockItems(readMode);
             const newStockItems = stockResult.data || [];
             setStockItems(newStockItems);
 
@@ -1000,28 +997,26 @@ export function InputBarangKeluar() {
             newStockItems.forEach(item => {
                 if (item.nama_produk && item.rak) {
                     const key = `${item.nama_produk.toLowerCase().trim()}|${item.rak.toLowerCase().trim()}`;
-                    stockMap.set(key, item.tersedia || 0);
+                    stockMap.set(key, Number(item.tersedia) || 0);
                 }
             });
 
             console.log("✅ Stock data refreshed, force updating all rows...");
             setRows(prevRows => {
                 return prevRows.map(row => {
-                    if (row.nama_produk && row.rak) {
-                        const key = `${row.nama_produk.toLowerCase().trim()}|${row.rak.toLowerCase().trim()}`;
-                        const stokTersedia = stockMap.get(key) || 0;
-                        return {
-                            ...row,
-                            stok_tersedia: stokTersedia,
-                            total_stok: calculateTotalStock(stokTersedia, row.jumlah)
-                        };
-                    }
-                    return row;
+                    const hasBoth = row.nama_produk && row.rak;
+                    const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
+                    const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
+                    return {
+                        ...row,
+                        stok_tersedia: stokTersedia,
+                        total_stok: calculateTotalStock(stokTersedia, row.jumlah)
+                    };
                 });
             });
 
         } catch (error) {
-            console.error('Error syncing all data from Supabase:', error);
+            console.error('Error syncing all data from database:', error);
             showToast('Gagal sinkronisasi data dari database', 'error');
         } finally {
             setDropdownLoading(false);
@@ -1241,38 +1236,24 @@ export function InputBarangKeluar() {
         const rakLower = rak.toLowerCase().trim();
         const produkLower = namaProduk.toLowerCase().trim();
 
-        console.log(`📊 Calculating stock for: [${produkLower}] at [${rakLower}]`);
-
         // Coba exact match dulu (case-insensitive) di cache local
         let item = stockItems.find(s =>
             (s.nama_produk || '').toLowerCase().trim() === produkLower &&
             (s.rak || '').toLowerCase().trim() === rakLower
         );
 
-        if (item) {
-            console.log(`✅ Exact match found in cache: ${item.nama_produk} @ ${item.rak}`);
-        }
-
         // Jika tidak ketemu di cache exact, coba fallback dengan pencocokan karakter ambigu
         if (!item) {
-            console.log(`⚠️ No exact match, trying ambiguous fallback for ${rak}...`);
             item = stockItems.find(s =>
                 (s.nama_produk || '').toLowerCase().trim() === produkLower &&
                 isRakAmbiguousMatch(rak, s.rak || '')
             );
-            if (item) {
-                console.warn(`⚠️ Rak ambiguity resolved: input "${rak}" matched DB "${item.rak}"`);
-            }
         }
 
-        // Selalu panggil database untuk hasil paling akurat (sinkron dengan Dashboard)
-        // Gunakan item.rak jika ditemukan (untuk normalisasi) atau original rak jika tidak
         const finalNama = item?.nama_produk || namaProduk;
         const finalRak = item?.rak || rak;
 
-        console.log(`📡 Querying DB for: ${finalNama} @ ${finalRak}`);
-        const result = await calculateAccurateStock(finalNama.trim(), finalRak.trim());
-        console.log(`✅ Result for [${finalNama}] @ [${finalRak}]: ${result}`);
+        const result = await DatabaseService.calculateAccurateStock(finalNama.trim(), finalRak.trim(), readMode);
         
         return result;
     };
