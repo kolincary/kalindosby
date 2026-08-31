@@ -21,7 +21,8 @@ import {
   Users,
   Activity,
   Ban,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Eye
 } from 'lucide-react';
 
 export const navigationItems = [
@@ -39,6 +40,7 @@ export const navigationItems = [
 ];
 
 export const devNavigationItems = [
+  { name: 'Pengaturan Visibilitas Menu', href: '/menu-visibility-settings', icon: Eye },
   { name: 'Transfer Sync Manager', href: '/transfer-sync', icon: ArrowRightLeft },
   { name: 'Perbaiki Sinkronisasi Stok', href: '/fix-stock-sync', icon: DatabaseIcon },
   { name: 'Update Packing', href: '/update-packing', icon: PackageCheck },
@@ -66,4 +68,11 @@ export const monitoringItems = [
 
 export const additionalMenuItems = [
   { name: 'Cek Rak', href: '/cek-rak', icon: QrCode },
+];
+
+export const allMenuCategories = [
+  { key: 'navigasi_utama', name: 'Navigasi Utama', items: navigationItems },
+  { key: 'master_data', name: 'Master Data', items: masterDataItems },
+  { key: 'monitoring', name: 'Monitoring', items: monitoringItems },
+  { key: 'additional', name: 'Menu Lainnya', items: additionalMenuItems },
 ];

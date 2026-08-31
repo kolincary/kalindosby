@@ -793,12 +793,10 @@ export function DataGudang() {
   }, []);
 
   const handleDeleteClick = useCallback((item: StockReport) => {
-    handleActionWithPin(() => {
-      setDeleteConfirm({
-        isOpen: true,
-        itemId: item.id,
-        itemName: item.nama_produk
-      });
+    setDeleteConfirm({
+      isOpen: true,
+      itemId: item.id,
+      itemName: item.nama_produk
     });
   }, []);
 
@@ -824,11 +822,9 @@ export function DataGudang() {
 
   const handleDeleteBulkClick = useCallback(() => {
     if (selectedIds.size === 0) return;
-    handleActionWithPin(() => {
-      setBulkDeleteConfirm({
-        isOpen: true,
-        count: selectedIds.size
-      });
+    setBulkDeleteConfirm({
+      isOpen: true,
+      count: selectedIds.size
     });
   }, [selectedIds]);
 
@@ -868,63 +864,61 @@ export function DataGudang() {
   const handleUpdateItem = async (updatedItems: StockReport[]) => {
     if (updatedItems.length === 0 || !editingItem) return;
 
-    handleActionWithPin(async () => {
-      try {
-        const updatedItem = updatedItems[0];
+    try {
+      const updatedItem = updatedItems[0];
 
-        // Pengecekan Duplikat (Kecuali ID yang sedang di-edit)
-        if (writeMode !== 'firebase') {
-          const { data: existing, error: checkError } = await supabase
-            .from('stock_items')
-            .select('id')
-            .eq('nama_produk', updatedItem.nama_produk)
-            .eq('rak', updatedItem.rak)
-            .eq('sub_rak', updatedItem.sub_rak || updatedItem.rak)
-            .eq('status', 'Aktif')
-            .neq('id', editingItem.id)
-            .limit(1);
+      // Pengecekan Duplikat (Kecuali ID yang sedang di-edit)
+      if (writeMode !== 'firebase') {
+        const { data: existing, error: checkError } = await supabase
+          .from('stock_items')
+          .select('id')
+          .eq('nama_produk', updatedItem.nama_produk)
+          .eq('rak', updatedItem.rak)
+          .eq('sub_rak', updatedItem.sub_rak || updatedItem.rak)
+          .eq('status', 'Aktif')
+          .neq('id', editingItem.id)
+          .limit(1);
 
-          if (checkError) {
-            console.error('Error checking duplicate:', checkError);
-          }
-
-          if (existing && existing.length > 0) {
-            showToast(`Gagal: Kombinasi Produk "${updatedItem.nama_produk}", Rak "${updatedItem.rak}", dan Sub Rak "${updatedItem.sub_rak || updatedItem.rak}" sudah ada di database!`, 'error');
-            return;
-          }
+        if (checkError) {
+          console.error('Error checking duplicate:', checkError);
         }
 
-        const updates = {
-          nama_produk: updatedItem.nama_produk,
-          packing: updatedItem.packing,
-          rak: updatedItem.rak,
-          sub_rak: updatedItem.sub_rak,
-          satuan: updatedItem.satuan,
-          stok_awal: updatedItem.stok_awal,
-          status: 'Aktif'
-        };
-        
-        const { error } = await DatabaseService.updateStockItem(editingItem.id, updates, writeMode);
-
-        if (error) {
-          console.error('Error updating item:', error);
-          showToast('Gagal mengupdate data', 'error');
+        if (existing && existing.length > 0) {
+          showToast(`Gagal: Kombinasi Produk "${updatedItem.nama_produk}", Rak "${updatedItem.rak}", dan Sub Rak "${updatedItem.sub_rak || updatedItem.rak}" sudah ada di database!`, 'error');
           return;
         }
-
-        showToast(`Data "${updatedItem.nama_produk}" berhasil diupdate!`, 'success');
-        setIsEditModalOpen(false);
-        setEditingItem(null);
-        
-        allStockItemsRef.current = allStockItemsRef.current.map(item => 
-          item.id === editingItem.id ? { ...item, ...updates } : item
-        );
-        loadStockData(false);
-      } catch (error) {
-        console.error('Error updating item:', error);
-        showToast('Terjadi kesalahan saat mengupdate data', 'error');
       }
-    });
+
+      const updates = {
+        nama_produk: updatedItem.nama_produk,
+        packing: updatedItem.packing,
+        rak: updatedItem.rak,
+        sub_rak: updatedItem.sub_rak,
+        satuan: updatedItem.satuan,
+        stok_awal: updatedItem.stok_awal,
+        status: 'Aktif'
+      };
+      
+      const { error } = await DatabaseService.updateStockItem(editingItem.id, updates, writeMode);
+
+      if (error) {
+        console.error('Error updating item:', error);
+        showToast('Gagal mengupdate data', 'error');
+        return;
+      }
+
+      showToast(`Data "${updatedItem.nama_produk}" berhasil diupdate!`, 'success');
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      
+      allStockItemsRef.current = allStockItemsRef.current.map(item => 
+        item.id === editingItem.id ? { ...item, ...updates } : item
+      );
+      loadStockData(false);
+    } catch (error) {
+      console.error('Error updating item:', error);
+      showToast('Terjadi kesalahan saat mengupdate data', 'error');
+    }
   };
 
   const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -958,53 +952,50 @@ export function DataGudang() {
   const handleSaveBulkEdit = async (updatedItems: StockReport[]) => {
     if (updatedItems.length === 0) return;
 
-    handleActionWithPin(async () => {
-      try {
-        let successCount = 0;
-        let failCount = 0;
+    try {
+      let successCount = 0;
+      let failCount = 0;
 
-        for (const item of updatedItems) {
-          const updates = {
-            packing: item.packing,
-            rak: item.rak,
-            sub_rak: item.sub_rak,
-            satuan: item.satuan,
-            stok_awal: item.stok_awal,
-            status: 'Aktif'
-          };
-          const { error } = await DatabaseService.updateStockItem(item.id, updates, writeMode);
+      for (const item of updatedItems) {
+        const updates = {
+          packing: item.packing,
+          rak: item.rak,
+          sub_rak: item.sub_rak,
+          satuan: item.satuan,
+          stok_awal: item.stok_awal,
+          status: 'Aktif'
+        };
+        const { error } = await DatabaseService.updateStockItem(item.id, updates, writeMode);
 
-          if (error) {
-            console.error('Error updating item:', error);
-            failCount++;
-          } else {
-            successCount++;
-          }
-        }
-
-        if (failCount > 0) {
-          showToast(`Berhasil update ${successCount} data, Gagal ${failCount} data`, 'warning');
+        if (error) {
+          console.error('Error updating item:', error);
+          failCount++;
         } else {
-          showToast(`Berhasil update ${successCount} data!`, 'success');
+          successCount++;
         }
-
-        setIsBulkEditModalOpen(false);
-        setSelectedIds(new Set());
-        setBulkEditItems([]);
-        
-        // Update cache locally
-        const updatedItemsMap = new Map(updatedItems.map(item => [item.id, item]));
-        allStockItemsRef.current = allStockItemsRef.current.map(item => 
-          updatedItemsMap.has(item.id) 
-            ? { ...item, packing: updatedItemsMap.get(item.id)!.packing, rak: updatedItemsMap.get(item.id)!.rak, sub_rak: updatedItemsMap.get(item.id)!.sub_rak, satuan: updatedItemsMap.get(item.id)!.satuan, stok_awal: updatedItemsMap.get(item.id)!.stok_awal }
-            : item
-        );
-        loadStockData(false);
-      } catch (error) {
-        console.error('Error bulk updating items:', error);
-        showToast('Terjadi kesalahan saat mengupdate data massal', 'error');
       }
-    });
+
+      if (failCount > 0) {
+        showToast(`Berhasil update ${successCount} data, Gagal ${failCount} data`, 'warning');
+      } else {
+        showToast(`Berhasil update ${successCount} data!`, 'success');
+      }
+
+      setIsBulkEditModalOpen(false);
+      setBulkEditItems([]);
+      setSelectedIds(new Set());
+
+      const updatedItemsMap = new Map(updatedItems.map(item => [item.id, item]));
+      allStockItemsRef.current = allStockItemsRef.current.map(item => 
+        updatedItemsMap.has(item.id) 
+          ? { ...item, packing: updatedItemsMap.get(item.id)!.packing, rak: updatedItemsMap.get(item.id)!.rak, sub_rak: updatedItemsMap.get(item.id)!.sub_rak, satuan: updatedItemsMap.get(item.id)!.satuan, stok_awal: updatedItemsMap.get(item.id)!.stok_awal }
+          : item
+      );
+      loadStockData(false);
+    } catch (error) {
+      console.error('Error bulk updating items:', error);
+      showToast('Terjadi kesalahan saat mengupdate data massal', 'error');
+    }
   };
 
   const handleExport = useCallback(() => {
@@ -1720,7 +1711,7 @@ export function DataGudang() {
                 </div>
                 <div className="flex items-center gap-2 lg:gap-3">
                   <button
-                    onClick={() => handleActionWithPin(handleOpenBulkEdit)}
+                    onClick={handleOpenBulkEdit}
                     className="h-9 px-4 bg-white hover:bg-gray-50 text-blue-700 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2"
                   >
                     <Edit2 className="h-4 w-4" />

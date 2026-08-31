@@ -40,6 +40,9 @@ import { DatabaseSettings } from './components/DatabaseSettings';
 import { DevModeSettings } from './components/DevModeSettings';
 import { RoleNotificationBlocker } from './components/RoleNotificationBlocker';
 import { ManageRoleNotifications } from './components/ManageRoleNotifications';
+import { ManageMenuVisibility } from './components/ManageMenuVisibility';
+import { MenuVisibilityProvider } from './lib/menuVisibilityContext';
+
 function AuthenticatedApp() {
   const { user, loading } = useAuth();
 
@@ -115,6 +118,7 @@ function AuthenticatedApp() {
           <Route path="/database-settings" element={<DatabaseSettings />} />
           <Route path="/dev-settings" element={<DevModeSettings />} />
           <Route path="/manage-role-notifications" element={<ManageRoleNotifications />} />
+          <Route path="/menu-visibility-settings" element={<ManageMenuVisibility />} />
         </Routes>
       </Layout>
     </>
@@ -128,7 +132,9 @@ function App() {
     <Router>
       <AuthProvider>
         <DatabaseProvider>
-          <AuthenticatedApp />
+          <MenuVisibilityProvider>
+            <AuthenticatedApp />
+          </MenuVisibilityProvider>
         </DatabaseProvider>
       </AuthProvider>
     </Router>

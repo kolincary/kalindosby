@@ -11,6 +11,7 @@ import {
   monitoringItems, 
   additionalMenuItems 
 } from '../lib/menuConfig';
+import { useMenuVisibility } from '../lib/menuVisibilityContext';
 import {
   LayoutDashboard,
   Package,
@@ -40,7 +41,8 @@ import {
   QrCode,
   LogOut,
   Users,
-  Activity
+  Activity,
+  EyeOff
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -115,6 +117,7 @@ export function Layout({ children }: LayoutProps) {
   const [monitoringOpen, setMonitoringOpen] = React.useState(false);
   const [devModeOpen, setDevModeOpen] = React.useState(false);
   const { userEmail, userName, userAvatar, userRole, userPermissions, signOut } = useAuth();
+  const { isMenuHidden, isCategoryHidden } = useMenuVisibility();
   const isDevMode = useDevMode(userName, userEmail);
   const [scrolled, setScrolled] = React.useState(false);
 
@@ -129,6 +132,17 @@ export function Layout({ children }: LayoutProps) {
   const hasAccess = (href: string) => {
     if (userRole === 'developer') return true;
     return userPermissions.includes(href);
+  };
+
+  const isVisibleForUser = (href: string, categoryKey?: string) => {
+    if (categoryKey && isCategoryHidden(categoryKey)) return false;
+    if (isMenuHidden(href)) return false;
+    return true;
+  };
+
+  const hasAccessAndVisible = (href: string, categoryKey?: string) => {
+    if (!hasAccess(href)) return false;
+    return isVisibleForUser(href, categoryKey);
   };
 
   const toggleDesktopSidebar = () => {
@@ -194,12 +208,13 @@ export function Layout({ children }: LayoutProps) {
           <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-7 no-scrollbar">
 
             {/* Nav Group: Main */}
+            {!isCategoryHidden('navigasi_utama') && navigationItems.filter(item => hasAccessAndVisible(item.href, 'navigasi_utama')).length > 0 && (
             <div className="space-y-1.5">
               <div className="px-3 mb-2 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
                 <span className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.2em]">Navigasi Utama</span>
               </div>
-              {navigationItems.filter(item => hasAccess(item.href)).map((item) => {
+              {navigationItems.filter(item => hasAccessAndVisible(item.href, 'navigasi_utama')).map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
@@ -218,9 +233,11 @@ export function Layout({ children }: LayoutProps) {
                 );
               })}
             </div>
+            )}
 
             {/* Nav Group: Analysis & Monitoring */}
-            {(monitoringItems.filter(item => hasAccess(item.href)).length > 0 || masterDataItems.filter(item => hasAccess(item.href)).length > 0) && (
+            {((!isCategoryHidden('monitoring') && monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).length > 0) ||
+              (!isCategoryHidden('master_data') && masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).length > 0)) && (
             <div className="space-y-2">
               <div className="px-3 mb-3 flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
@@ -228,7 +245,7 @@ export function Layout({ children }: LayoutProps) {
               </div>
 
               {/* Monitoring Dropdown */}
-              {monitoringItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {!isCategoryHidden('monitoring') && monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).length > 0 && (
               <>
                 <button
                   onClick={() => setMonitoringOpen(!monitoringOpen)}
@@ -246,7 +263,7 @@ export function Layout({ children }: LayoutProps) {
 
                 {monitoringOpen && (
                   <div className="ml-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
-                    {monitoringItems.filter(item => hasAccess(item.href)).map((item) => {
+                    {monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).map((item) => {
                       const isActive = location.pathname === item.href;
                       return (
                         <Link
@@ -266,7 +283,7 @@ export function Layout({ children }: LayoutProps) {
               )}
 
               {/* Master Data Dropdown */}
-              {masterDataItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {!isCategoryHidden('master_data') && masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).length > 0 && (
               <>
                 <button
                   onClick={() => setMasterDataOpen(!masterDataOpen)}
@@ -284,7 +301,7 @@ export function Layout({ children }: LayoutProps) {
 
                 {masterDataOpen && (
                   <div className="ml-6 space-y-1 animate-in slide-in-from-top-2 duration-200">
-                    {masterDataItems.filter(item => hasAccess(item.href)).map((item) => {
+                    {masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).map((item) => {
                       const isActive = location.pathname === item.href;
                       return (
                         <Link
@@ -306,13 +323,13 @@ export function Layout({ children }: LayoutProps) {
             )}
 
             {/* Nav Group: Utilities */}
-            {additionalMenuItems.filter(item => hasAccess(item.href)).length > 0 && (
+            {!isCategoryHidden('additional') && additionalMenuItems.filter(item => hasAccessAndVisible(item.href, 'additional')).length > 0 && (
             <div className="space-y-1.5 box-border">
               <div className="px-3 mb-2 flex items-center gap-2 text-none">
                 <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
                 <span className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.2em]">Tools & Alat</span>
               </div>
-              {additionalMenuItems.filter(item => hasAccess(item.href)).map((item) => {
+              {additionalMenuItems.filter(item => hasAccessAndVisible(item.href, 'additional')).map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
@@ -450,7 +467,7 @@ export function Layout({ children }: LayoutProps) {
 
           <nav className="mt-8 flex-1 px-4 py-4 pb-6 overflow-y-auto no-scrollbar">
             <div className="space-y-3">
-              {navigationItems.filter(item => hasAccess(item.href)).map((item) => {
+              {!isCategoryHidden('navigasi_utama') && navigationItems.filter(item => hasAccessAndVisible(item.href, 'navigasi_utama')).map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
@@ -470,7 +487,7 @@ export function Layout({ children }: LayoutProps) {
               })}
 
               {/* Monitoring Stok Dropdown - Desktop */}
-              {!desktopSidebarCollapsed && monitoringItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {!desktopSidebarCollapsed && !isCategoryHidden('monitoring') && monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).length > 0 && (
                 <div className="space-y-1.5 pt-2">
                   <button
                     onClick={() => setMonitoringOpen(!monitoringOpen)}
@@ -488,7 +505,7 @@ export function Layout({ children }: LayoutProps) {
 
                   {monitoringOpen && (
                     <div className="ml-4 pl-3 border-l-2 border-gray-100 space-y-1">
-                      {monitoringItems.filter(item => hasAccess(item.href)).map((item) => {
+                      {monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.href;
                         return (
@@ -511,7 +528,7 @@ export function Layout({ children }: LayoutProps) {
               )}
 
               {/* Monitoring Stok Icon Only - Collapsed */}
-              {desktopSidebarCollapsed && monitoringItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {desktopSidebarCollapsed && !isCategoryHidden('monitoring') && monitoringItems.filter(item => hasAccessAndVisible(item.href, 'monitoring')).length > 0 && (
                 <Link
                   to="/stok-minus"
                   className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${isMonitoringActive
@@ -525,7 +542,7 @@ export function Layout({ children }: LayoutProps) {
               )}
 
               {/* Master Data Dropdown - Desktop */}
-              {!desktopSidebarCollapsed && masterDataItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {!desktopSidebarCollapsed && !isCategoryHidden('master_data') && masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).length > 0 && (
                 <div className="space-y-1.5 pt-2">
                   <button
                     onClick={() => setMasterDataOpen(!masterDataOpen)}
@@ -543,7 +560,7 @@ export function Layout({ children }: LayoutProps) {
 
                   {masterDataOpen && (
                     <div className="ml-4 pl-3 border-l-2 border-gray-100 space-y-1">
-                      {masterDataItems.filter(item => hasAccess(item.href)).map((item) => {
+                      {masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.href;
                         return (
@@ -566,7 +583,7 @@ export function Layout({ children }: LayoutProps) {
               )}
 
               {/* Master Data Icon Only - Collapsed */}
-              {desktopSidebarCollapsed && masterDataItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {desktopSidebarCollapsed && !isCategoryHidden('master_data') && masterDataItems.filter(item => hasAccessAndVisible(item.href, 'master_data')).length > 0 && (
                 <Link
                   to="/master-data/gudang"
                   className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${isMasterDataActive
@@ -580,14 +597,14 @@ export function Layout({ children }: LayoutProps) {
               )}
 
               {/* Additional Menu Items - Desktop */}
-              {additionalMenuItems.filter(item => hasAccess(item.href)).length > 0 && (
+              {!isCategoryHidden('additional') && additionalMenuItems.filter(item => hasAccessAndVisible(item.href, 'additional')).length > 0 && (
               <div className="space-y-1 mt-4 pt-4 border-t border-gray-100">
                 {!desktopSidebarCollapsed && (
                   <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Menu Tambahan
                   </div>
                 )}
-                {additionalMenuItems.filter(item => hasAccess(item.href)).map((item) => {
+                {additionalMenuItems.filter(item => hasAccessAndVisible(item.href, 'additional')).map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
                   return (
