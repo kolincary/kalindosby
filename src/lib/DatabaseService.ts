@@ -627,6 +627,27 @@ export const DatabaseService = {
     }
   },
 
+  async deleteBatchMasterData(table: string, ids: string[], mode: DatabaseWriteMode = 'supabase') {
+    let result: any = { error: null };
+    if (mode === 'supabase' || mode === 'both') {
+      const { error } = await supabase.from(table).delete().in('id', ids);
+      if (error) result.error = error;
+    }
+    if (mode === 'firebase' || mode === 'both') {
+      try {
+        const batch = writeBatch(db);
+        ids.forEach(id => {
+          const docRef = doc(db, table, id);
+          batch.delete(docRef);
+        });
+        await batch.commit();
+      } catch (err: any) {
+        if (mode === 'firebase') result.error = err;
+      }
+    }
+    return result;
+  },
+
   async insertStockItems(items: any[], mode: DatabaseWriteMode) {
     if (mode === 'supabase' || mode === 'both') {
       const { data, error } = await supabase.from('stock_items').insert(items).select();
