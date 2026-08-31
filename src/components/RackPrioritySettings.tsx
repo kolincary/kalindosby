@@ -45,7 +45,7 @@ export function RackPrioritySettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [rackFilter, setRackFilter] = useState('');
+  const [rackFilter, setRackFilter] = useState('UTAMA');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'excluded'>('all');
   const [uniqueRacks, setUniqueRacks] = useState<string[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -432,6 +432,47 @@ export function RackPrioritySettings() {
 
         {/* 3. Search & Filter Bar */}
         <div className="bg-white rounded-2xl p-4 lg:p-5 border border-slate-100 shadow-sm space-y-4">
+          
+          {/* Quick Preset Buttons */}
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+            <span className="text-xs font-bold text-slate-400 mr-1 uppercase tracking-wider">Filter Cepat:</span>
+            <button
+              onClick={() => { setRackFilter('UTAMA'); setCurrentPage(1); }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border",
+                rackFilter.toUpperCase() === 'UTAMA'
+                  ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              )}
+            >
+              <span>⭐ Hanya Rak UTAMA</span>
+              <span className={cn(
+                "px-1.5 py-0.5 rounded-full text-[10px]",
+                rackFilter.toUpperCase() === 'UTAMA' ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+              )}>
+                {productRacks.filter(p => p.rak.toUpperCase() === 'UTAMA').length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setRackFilter(''); setCurrentPage(1); }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border",
+                rackFilter === ''
+                  ? "bg-blue-600 text-white border-blue-700 shadow-blue-500/20"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              )}
+            >
+              <span>🌐 Semua Lokasi Rak</span>
+              <span className={cn(
+                "px-1.5 py-0.5 rounded-full text-[10px]",
+                rackFilter === '' ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+              )}>
+                {productRacks.length}
+              </span>
+            </button>
+          </div>
+
           <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             
             {/* Search Input */}
