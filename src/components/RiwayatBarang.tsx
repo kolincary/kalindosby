@@ -3,10 +3,14 @@ import { Card, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
 import { Toast } from './ui/Toast';
 import { Modal } from './ui/Modal';
-import { Download, X, RefreshCw, QrCode, ChevronDown, Filter, Calendar, Package, Building, Layers, ArrowRightLeft, List, Tag, Calculator, AlertCircle, Search, Edit2, ArrowRight, CheckCircle, ArrowUpDown, Database } from 'lucide-react';
+import { Download, X, RefreshCw, QrCode, ChevronDown, Filter, Calendar, Package, Building, Layers, ArrowRightLeft, List, Tag, Calculator, AlertCircle, Search, Edit2, ArrowRight, CheckCircle, ArrowUpDown, Database, History } from 'lucide-react';
 import { supabase, fetchAllProducts } from '../lib/supabase';
 import { runDateMigration } from '../lib/dateMigration';
 import { realtimeManager } from '../lib/realtimeManager';
+import { useAuth } from '../lib/AuthContext';
+import { saveExportHistory } from '../lib/exportHistoryService';
+import { ExportHistoryModal } from './ExportHistoryModal';
+import { subscribeAppSettingsChange } from '../lib/settingsSync';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
@@ -383,18 +387,48 @@ export function RiwayatBarang() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isUpdatingInBackground, setIsUpdatingInBackground] = useState(false);
   const [hideRiwayatStats, setHideRiwayatStats] = useState<boolean>(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const { userName, userRole, userEmail } = useAuth();
 
   useEffect(() => {
     const fetchStatsSetting = async () => {
       try {
-        const { data } = await supabase
+        const { data: settingsData } = await supabase
           .from('app_settings')
-          .select('value')
-          .eq('key', 'hide_riwayat_stats')
-          .maybeSingle();
+          .select('key, value')
+          .in('key', ['hide_riwayat_stats', 'riwayat_stats_target_mode', 'riwayat_stats_allowed_roles']);
 
-        if (data) {
-          setHideRiwayatStats(data.value === 'true');
+        if (settingsData && settingsData.length > 0) {
+          const map = new Map(settingsData.map((s: any) => [s.key, s.value]));
+          const isGloballyHidden = map.get('hide_riwayat_stats') === 'true';
+          const targetMode = map.get('riwayat_stats_target_mode') || 'all';
+          const allowedRolesRaw = map.get('riwayat_stats_allowed_roles');
+          
+          let allowedRoles: string[] = ['developer', 'staf_admin', 'staf_gudang'];
+          if (allowedRolesRaw) {
+            try {
+              allowedRoles = JSON.parse(allowedRolesRaw);
+            } catch (e) {
+              allowedRoles = ['developer', 'staf_admin', 'staf_gudang'];
+            }
+          }
+
+          if (isGloballyHidden) {
+            setHideRiwayatStats(true);
+          } else if (targetMode === 'roles') {
+            const currentRole = userRole || localStorage.getItem('cached_user_role') || '';
+            const isDev = userEmail === 'rianambong@gmail.com' || userEmail === 'kepin@gmail.com' || userEmail === 'admin@gmail.com' || localStorage.getItem('devmode') === 'true' || currentRole === 'developer';
+            
+            if (isDev && allowedRoles.includes('developer')) {
+              setHideRiwayatStats(false);
+            } else if (currentRole && allowedRoles.includes(currentRole)) {
+              setHideRiwayatStats(false);
+            } else {
+              setHideRiwayatStats(true);
+            }
+          } else {
+            setHideRiwayatStats(false);
+          }
         }
       } catch (err) {
         console.error('Error loading riwayat stats setting:', err);
@@ -403,31 +437,20 @@ export function RiwayatBarang() {
 
     fetchStatsSetting();
 
-    // Direct Supabase Realtime Channel for zero-delay update across all users
-    const channel = supabase
-      .channel('app_settings_riwayat_stats_' + Math.random().toString(36).substring(7))
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'app_settings' },
-        (payload: any) => {
-          if (payload.new && payload.new.key === 'hide_riwayat_stats') {
-            setHideRiwayatStats(payload.new.value === 'true');
-          } else {
-            fetchStatsSetting();
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to unified zero-delay real-time sync across local tabs, broadcast channel, and Supabase
+    const unsubscribeSettings = subscribeAppSettingsChange(() => {
+      fetchStatsSetting();
+    });
 
     const subId = realtimeManager.subscribe('app_settings', () => {
       fetchStatsSetting();
     });
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribeSettings();
       realtimeManager.unsubscribe(subId);
     };
-  }, []);
+  }, [userRole, userEmail]);
   const [qrModalData, setQrModalData] = useState<{ sku: string; tgl: string; tgl_scan: string } | null>(null);
   const [filters, setFilters] = useState({
     barang: '',
@@ -1697,6 +1720,20 @@ export function RiwayatBarang() {
       const exportFileName = `riwayat-barang-${exportDateRange}.xlsx`;
       saveAs(blob, exportFileName);
 
+      // Async background task for history
+      saveExportHistory(
+        blob,
+        userName || 'Unknown',
+        exportDateRange,
+        new Date().toLocaleTimeString('id-ID', { hour12: false }).replace(/:/g, '.'),
+        exportFileName
+      ).then(() => {
+        console.log('Riwayat export berhasil disimpan.');
+      }).catch((error) => {
+        console.error('Gagal menyimpan riwayat:', error);
+        showToast(`Gagal menyimpan riwayat export: ${error.message}`, 'error');
+      });
+
       showToast(`Export Excel berhasil! ${filteredData.length} data telah diunduh.`, 'success');
     } catch (error) {
       console.error('Error exporting standard data:', error);
@@ -1834,21 +1871,24 @@ export function RiwayatBarang() {
                   FIX DATE FORMAT
                 </button>
               )}
+
               <button
-                onClick={() => { setIsAnalysisModalOpen(true); setAnalysisResults([]); }}
-                className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-black rounded-xl shadow-lg transition-all border border-teal-400/30 flex items-center gap-2 tracking-widest active:scale-95"
+                onClick={() => setIsHistoryModalOpen(true)}
+                className="px-5 py-2.5 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-[10px] font-black rounded-xl shadow-[0_8px_25px_rgba(192,38,211,0.4)] transition-all flex items-center gap-2 tracking-widest active:scale-95 border border-fuchsia-400/50"
               >
-                <Calculator className="w-4 h-4" />
-                CEK SALDO
+                <History className="w-4 h-4" />
+                RIWAYAT EXPORT
               </button>
+
               <button
                 onClick={exportDataStandard}
-                className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 text-[10px] font-black rounded-xl shadow-lg transition-all border-none flex items-center gap-2 tracking-widest active:scale-95"
+                className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 text-[10px] font-black rounded-xl shadow-[0_8px_25px_rgba(37,99,235,0.2)] transition-all border-none flex items-center gap-2 tracking-widest active:scale-95"
               >
                 <Download className="w-4 h-4" />
                 EXPORT
               </button>
             </div>
+            
           </div>
         </div>
       </div>
@@ -1858,6 +1898,11 @@ export function RiwayatBarang() {
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ isOpen: false, message: '', type: 'info' })}
+      />
+
+      <ExportHistoryModal 
+        isOpen={isHistoryModalOpen} 
+        onClose={() => setIsHistoryModalOpen(false)} 
       />
 
       <div className="space-y-6 lg:px-10 pb-12">
