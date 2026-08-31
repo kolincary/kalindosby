@@ -20,7 +20,8 @@ import {
   QrCode,
   Users,
   Activity,
-  Ban
+  Ban,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export const navigationItems = [
@@ -33,6 +34,7 @@ export const navigationItems = [
   { name: 'Data Gudang', href: '/data-gudang', icon: Database },
   { name: 'Riwayat Barang', href: '/riwayat', icon: History },
   { name: 'Update Lokasi', href: '/update-lokasi', icon: MapPin },
+  { name: 'Pengaturan Prioritas Rak', href: '/rack-priority-settings', icon: SlidersHorizontal },
   { name: 'Database Log', href: '/database-log', icon: Database },
 ];
 
@@ -44,7 +46,6 @@ export const devNavigationItems = [
   { name: 'Dev: Update Rak Khusus', href: '/dev-rack-update', icon: Settings },
   { name: 'DevMode Settings', href: '/dev-settings', icon: Settings },
   { name: 'Kelola Notifikasi Update', href: '/notification-manager', icon: Bell },
-  { name: 'Pengaturan Prioritas Rak', href: '/rack-priority-settings', icon: Settings },
   { name: 'User Management', href: '/user-management', icon: Users },
   { name: 'Pengaturan Quest Harian', href: '/daily-quest-manager', icon: ShieldAlert },
   { name: 'Pengaturan Database', href: '/database-settings', icon: DatabaseIcon },

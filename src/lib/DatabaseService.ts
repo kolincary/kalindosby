@@ -548,6 +548,85 @@ export const DatabaseService = {
     }
   },
 
+  async fetchProductRackExclusions(mode: DatabaseReadMode = 'supabase') {
+    if (mode === 'supabase') {
+      try {
+        let allData: any[] = [];
+        let from = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('product_rack_exclusions')
+            .select('nama_produk, rak, is_excluded')
+            .range(from, from + pageSize - 1);
+
+          if (error) {
+            console.warn('Supabase product_rack_exclusions fetch warning:', error.message);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allData = [...allData, ...data];
+            from += pageSize;
+            hasMore = data.length === pageSize;
+          } else {
+            hasMore = false;
+          }
+        }
+        return allData;
+      } catch (err) {
+        console.error('Error in fetchProductRackExclusions:', err);
+        return [];
+      }
+    } else {
+      try {
+        const colRef = collection(db, 'product_rack_exclusions');
+        const snap = await getDocs(colRef);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (err) {
+        console.error('Error fetching exclusions from Firebase:', err);
+        return [];
+      }
+    }
+  },
+
+  async upsertProductRackExclusions(items: Array<{ nama_produk: string; rak: string; is_excluded: boolean }>, mode: DatabaseWriteMode = 'supabase') {
+    if (mode === 'supabase' || mode === 'both') {
+      try {
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < items.length; i += BATCH_SIZE) {
+          const batch = items.slice(i, i + BATCH_SIZE);
+          const { error } = await supabase
+            .from('product_rack_exclusions')
+            .upsert(batch, {
+              onConflict: 'nama_produk,rak'
+            });
+          if (error) {
+            console.warn('Supabase upsert exclusions warning:', error.message);
+          }
+        }
+      } catch (err) {
+        console.error('Supabase upsert exclusions error:', err);
+      }
+    }
+
+    if (mode === 'firebase' || mode === 'both') {
+      try {
+        const batch = writeBatch(db);
+        items.forEach(item => {
+          const docId = `${(item.nama_produk || '').replace(/[\/\s]/g, '_')}_${(item.rak || '').replace(/[\/\s]/g, '_')}`;
+          const docRef = doc(db, 'product_rack_exclusions', docId);
+          batch.set(docRef, item, { merge: true });
+        });
+        await batch.commit();
+      } catch (err) {
+        console.error('Firebase upsert exclusions error:', err);
+      }
+    }
+  },
+
   async insertStockItems(items: any[], mode: DatabaseWriteMode) {
     if (mode === 'supabase' || mode === 'both') {
       const { data, error } = await supabase.from('stock_items').insert(items).select();
