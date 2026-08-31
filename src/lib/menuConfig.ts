@@ -34,7 +34,7 @@ export const navigationItems = [
   { name: 'Data Gudang', href: '/data-gudang', icon: Database },
   { name: 'Riwayat Barang', href: '/riwayat', icon: History },
   { name: 'Update Lokasi', href: '/update-lokasi', icon: MapPin },
-  { name: 'Pengaturan Prioritas Rak', href: '/rack-priority-settings', icon: SlidersHorizontal },
+  { name: 'Prioritas Rak', href: '/rack-priority-settings', icon: SlidersHorizontal },
   { name: 'Database Log', href: '/database-log', icon: Database },
 ];
 

@@ -445,7 +445,8 @@ export function RackPrioritySettings() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               )}
             >
-              <span>⭐ Hanya Rak UTAMA</span>
+              <Layers className="w-3.5 h-3.5" />
+              <span>Hanya Rak UTAMA</span>
               <span className={cn(
                 "px-1.5 py-0.5 rounded-full text-[10px]",
                 rackFilter.toUpperCase() === 'UTAMA' ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
@@ -463,7 +464,8 @@ export function RackPrioritySettings() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               )}
             >
-              <span>🌐 Semua Lokasi Rak</span>
+              <Filter className="w-3.5 h-3.5" />
+              <span>Semua Lokasi Rak</span>
               <span className={cn(
                 "px-1.5 py-0.5 rounded-full text-[10px]",
                 rackFilter === '' ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
