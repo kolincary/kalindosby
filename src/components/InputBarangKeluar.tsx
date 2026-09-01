@@ -877,14 +877,18 @@ export function InputBarangKeluar() {
         const loadAndSyncData = async () => {
             try {
                 setDropdownLoading(true);
-                // Load from cache first
+                // Load from cache first (independently)
                 const cachedProducts = loadDropdownCache(PRODUCTS_CACHE_KEY);
                 const cachedWarehouses = loadDropdownCache(WAREHOUSES_CACHE_KEY);
                 const cachedRacks = loadDropdownCache(RACKS_CACHE_KEY);
 
-                if (cachedProducts.length > 0 && cachedWarehouses.length > 0 && cachedRacks.length > 0) {
+                if (cachedProducts && cachedProducts.length > 0) {
                     setValidProducts(cachedProducts);
+                }
+                if (cachedWarehouses && cachedWarehouses.length > 0) {
                     setValidWarehouses(cachedWarehouses);
+                }
+                if (cachedRacks && cachedRacks.length > 0) {
                     setValidRacks(cachedRacks);
                 }
 
@@ -1008,14 +1012,16 @@ export function InputBarangKeluar() {
             const fetchedProducts = (productsData || []).map((item: any) => item.nama || item.sku_code).filter(Boolean);
             const uniqueProducts = [...new Set(fetchedProducts)].sort();
 
-            const filteredWarehouses = (warehousesData || []).filter((item: any) =>
-                item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_KELUAR'
-            );
+            const filteredWarehouses = (warehousesData || []).filter((item: any) => {
+                const menu = (item.tampil_di_menu || '').toString().trim().toUpperCase();
+                return menu === 'KEDUANYA' || menu === 'INPUT_KELUAR';
+            });
             const warehouseNames = filteredWarehouses.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            const filteredRacks = (racksData || []).filter((item: any) =>
-                item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_KELUAR'
-            );
+            const filteredRacks = (racksData || []).filter((item: any) => {
+                const menu = (item.tampil_di_menu || '').toString().trim().toUpperCase();
+                return menu === 'KEDUANYA' || menu === 'INPUT_KELUAR';
+            });
             const rackNames = filteredRacks.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
             setValidProducts(uniqueProducts);
@@ -3274,7 +3280,7 @@ export function InputBarangKeluar() {
                                             </th>}
                                             {visibleColumns.jumlah && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-24 whitespace-nowrap uppercase tracking-wider">Jumlah</th>}
                                             {visibleColumns.type && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-20 whitespace-nowrap uppercase tracking-wider">Type</th>}
-                                            {visibleColumns.gudang && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-24 whitespace-nowrap uppercase tracking-wider">Gudang</th>}
+                                            {visibleColumns.gudang && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-32 whitespace-nowrap uppercase tracking-wider">Gudang</th>}
                                             {visibleColumns.rak && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-32 whitespace-nowrap uppercase tracking-wider">Rak</th>}
                                             {visibleColumns.stok_tersedia && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-28 whitespace-nowrap uppercase tracking-wider">Tersedia</th>}
                                             {visibleColumns.total_stok && <th className="px-4 py-4 text-left font-bold border-r border-blue-500 w-28 whitespace-nowrap uppercase tracking-wider">Total</th>}
@@ -3361,7 +3367,7 @@ export function InputBarangKeluar() {
                                                 </td>}
                                                 {visibleColumns.gudang && <td className="px-4 py-3 border-r border-gray-100">
                                                     {index === 0 ? (
-                                                        <div className="relative" style={{ minWidth: '100px' }}>
+                                                        <div className="relative min-w-[120px]">
                                                             <CustomDropdown
                                                                 value={row.gudang}
                                                                 onChange={(e) => {
@@ -3369,9 +3375,10 @@ export function InputBarangKeluar() {
                                                                     setRows(rows.map(r => ({ ...r, gudang: newGudang })));
                                                                 }}
                                                                 options={validWarehouses}
-                                                                className={`${row.validationErrors?.includes('gudang') || row.validationErrors?.includes('gudang_invalid')
-                                                                    ? 'border-red-500 bg-red-50'
-                                                                    : 'border-gray-200'
+                                                                placeholder="Gudang..."
+                                                                className={`text-sm font-medium ${row.validationErrors?.includes('gudang') || row.validationErrors?.includes('gudang_invalid')
+                                                                    ? 'border-red-500 bg-red-50 focus:ring-red-500'
+                                                                    : 'border-gray-200 focus:ring-blue-500/20 focus:border-blue-500'
                                                                     } h-10`}
                                                                 isInTable={true}
                                                                 loading={dropdownLoading}
@@ -3379,9 +3386,9 @@ export function InputBarangKeluar() {
                                                             />
                                                         </div>
                                                     ) : (
-                                                        <div className={`px-2 py-2 text-sm rounded-lg font-medium text-center ${row.validationErrors?.includes('gudang') || row.validationErrors?.includes('gudang_invalid')
-                                                            ? 'text-red-600 bg-red-50 border border-red-200'
-                                                            : 'text-gray-500 bg-gray-50 border border-gray-100'
+                                                        <div className={`px-3 py-2 text-sm rounded-lg font-bold border ${row.validationErrors?.includes('gudang') || row.validationErrors?.includes('gudang_invalid')
+                                                            ? 'text-red-600 bg-red-50 border-red-200 uppercase tracking-tight'
+                                                            : 'text-gray-600 bg-gray-50 border-gray-100'
                                                             }`}>
                                                             {row.gudang || '-'}
                                                         </div>

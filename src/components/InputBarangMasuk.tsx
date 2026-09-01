@@ -544,9 +544,13 @@ export function InputBarangMasuk() {
                 const cachedWarehouses = loadDropdownCache(WAREHOUSES_CACHE_KEY);
                 const cachedRacks = loadDropdownCache(RACKS_CACHE_KEY);
 
-                if (cachedProducts.length > 0 && cachedWarehouses.length > 0 && cachedRacks.length > 0) {
+                if (cachedProducts && cachedProducts.length > 0) {
                     setValidProducts(cachedProducts);
+                }
+                if (cachedWarehouses && cachedWarehouses.length > 0) {
                     setValidWarehouses(cachedWarehouses);
+                }
+                if (cachedRacks && cachedRacks.length > 0) {
                     setValidRacks(cachedRacks);
                 }
 
