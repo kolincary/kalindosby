@@ -433,31 +433,43 @@ export function InputBarangMasuk() {
         try {
             setDropdownLoading(true);
 
-            const [productsData, warehousesData, racksData] = await Promise.all([
+            const [productsResult, warehousesResult, racksResult] = await Promise.allSettled([
                 DatabaseService.fetchActiveProducts(readMode),
                 DatabaseService.fetchActiveWarehouses(readMode),
                 DatabaseService.fetchActiveRacks(readMode)
             ]);
 
+            const productsData = productsResult.status === 'fulfilled' ? productsResult.value : [];
+            const warehousesData = warehousesResult.status === 'fulfilled' ? warehousesResult.value : [];
+            const racksData = racksResult.status === 'fulfilled' ? racksResult.value : [];
+
             const fetchedProducts = (productsData || []).map((item: any) => item.nama || item.sku_code).filter(Boolean);
             const uniqueProducts = [...new Set(fetchedProducts)].sort();
 
-            const filteredWarehouses = (warehousesData || []).filter((item: any) =>
-                item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_MASUK'
-            );
+            const filteredWarehouses = (warehousesData || []).filter((item: any) => {
+                const menu = (item.tampil_di_menu || '').toString().trim().toUpperCase();
+                return menu === 'KEDUANYA' || menu === 'INPUT_MASUK';
+            });
             const warehouseNames = filteredWarehouses.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            const filteredRacks = (racksData || []).filter((item: any) =>
-                item.tampil_di_menu === 'KEDUANYA' || item.tampil_di_menu === 'INPUT_MASUK'
-            );
+            const filteredRacks = (racksData || []).filter((item: any) => {
+                const menu = (item.tampil_di_menu || '').toString().trim().toUpperCase();
+                return menu === 'KEDUANYA' || menu === 'INPUT_MASUK';
+            });
             const rackNames = filteredRacks.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            setValidProducts(uniqueProducts);
-            setValidWarehouses(warehouseNames);
-            setValidRacks(rackNames);
-            saveDropdownCache(PRODUCTS_CACHE_KEY, uniqueProducts);
-            saveDropdownCache(WAREHOUSES_CACHE_KEY, warehouseNames);
-            saveDropdownCache(RACKS_CACHE_KEY, rackNames);
+            if (uniqueProducts.length > 0) {
+                setValidProducts(uniqueProducts);
+                saveDropdownCache(PRODUCTS_CACHE_KEY, uniqueProducts);
+            }
+            if (warehouseNames.length > 0) {
+                setValidWarehouses(warehouseNames);
+                saveDropdownCache(WAREHOUSES_CACHE_KEY, warehouseNames);
+            }
+            if (rackNames.length > 0) {
+                setValidRacks(rackNames);
+                saveDropdownCache(RACKS_CACHE_KEY, rackNames);
+            }
 
             console.log("🔄 Fetching fresh stock data and logs from database...");
             const stockResult = await DatabaseService.fetchAllStockItems(readMode);

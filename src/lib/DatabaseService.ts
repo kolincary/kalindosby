@@ -391,76 +391,90 @@ export const DatabaseService = {
     if (totalErrors > 0) throw new Error(`Failed to delete ${totalErrors} records.`);
   },
 
-  async fetchActiveProducts(mode: DatabaseReadMode) {
-    if (mode === 'supabase') {
-      const allData: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      let hasMore = true;
-
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('products')
-          .select('sku_code, nama')
-          .eq('status', 'Aktif')
-          .range(from, from + batchSize - 1);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          allData.push(...data);
-          from += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
+  async fetchActiveProducts(mode: DatabaseReadMode = 'supabase') {
+    if (mode === 'firebase') {
+      try {
+        const colRef = collection(db, 'products');
+        const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          return snapshot.docs.map(doc => doc.data());
         }
+      } catch (err) {
+        console.warn('Firebase fetchActiveProducts failed, falling back to Supabase:', err);
       }
-      return allData;
-    } else {
-      const colRef = collection(db, 'products');
-      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => doc.data());
     }
+
+    const allData: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('products')
+        .select('sku_code, nama')
+        .eq('status', 'Aktif')
+        .range(from, from + batchSize - 1);
+
+      if (error) {
+        console.error('Supabase fetchActiveProducts error:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allData.push(...data);
+        from += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
+    }
+    return allData;
   },
 
-  async fetchAllStockItems(mode: DatabaseReadMode) {
-    if (mode === 'supabase') {
-      const allData: any[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      let hasMore = true;
-      let totalCount = 0;
-
-      while (hasMore) {
-        const { data, error, count } = await supabase
-          .from('stock_items')
-          .select('*', { count: 'exact' })
-          .eq('status', 'Aktif')
-          .order('nama_produk', { ascending: true })
-          .range(from, from + batchSize - 1);
-
-        if (error) throw error;
-
-        if (count !== null && totalCount === 0) totalCount = count;
-
-        if (data && data.length > 0) {
-          allData.push(...data);
-          from += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
+  async fetchAllStockItems(mode: DatabaseReadMode = 'supabase') {
+    if (mode === 'firebase') {
+      try {
+        const colRef = collection(db, STOCK_COLLECTION);
+        const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          return { data, count: data.length };
         }
+      } catch (err) {
+        console.warn('Firebase fetchAllStockItems failed, falling back to Supabase:', err);
       }
-      return { data: allData, count: totalCount || allData.length };
-    } else {
-      // Fetch all from Firebase for local pagination
-      const colRef = collection(db, STOCK_COLLECTION);
-      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return { data, count: data.length };
     }
+
+    const allData: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    let hasMore = true;
+    let totalCount = 0;
+
+    while (hasMore) {
+      const { data, error, count } = await supabase
+        .from('stock_items')
+        .select('*', { count: 'exact' })
+        .eq('status', 'Aktif')
+        .order('nama_produk', { ascending: true })
+        .range(from, from + batchSize - 1);
+
+      if (error) throw error;
+
+      if (count !== null && totalCount === 0) totalCount = count;
+
+      if (data && data.length > 0) {
+        allData.push(...data);
+        from += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
+    }
+    return { data: allData, count: totalCount || allData.length };
   },
 
   async calculateAccurateStock(namaProduk: string, rak: string, mode: DatabaseReadMode = 'supabase'): Promise<number> {
@@ -468,9 +482,7 @@ export const DatabaseService = {
       return 0;
     }
 
-    if (mode === 'supabase') {
-      return await calculateAccurateStock(namaProduk, rak);
-    } else {
+    if (mode === 'firebase') {
       try {
         const colRef = collection(db, STOCK_COLLECTION);
         const q = firestoreQuery(
@@ -480,42 +492,54 @@ export const DatabaseService = {
           where('status', '==', 'Aktif')
         );
         const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-          return 0;
+        if (!snapshot.empty) {
+          const stockItem = snapshot.docs[0].data();
+          const stokAwal = Number(stockItem.stok_awal) || 0;
+
+          // Fetch logs from Firestore
+          const logRef = collection(db, COLLECTION_NAME);
+          const logQ = firestoreQuery(logRef, where('sku', '==', namaProduk.trim()));
+          const logSnap = await getDocs(logQ);
+          const logEntries = logSnap.docs.map(d => d.data());
+
+          const targetRakLower = rak.trim().toLowerCase();
+          const itemLogs = logEntries.filter(l => 
+            (l.rak || '').toString().trim().toLowerCase() === targetRakLower
+          );
+
+          const masuk = itemLogs
+            .filter(l => l.type === 'IN')
+            .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
+
+          const keluar = itemLogs
+            .filter(l => l.type === 'OUT')
+            .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
+
+          return stokAwal + masuk - keluar;
         }
-
-        const stockItem = snapshot.docs[0].data();
-        const stokAwal = Number(stockItem.stok_awal) || 0;
-
-        // Fetch logs from Firestore
-        const logRef = collection(db, COLLECTION_NAME);
-        const logQ = firestoreQuery(logRef, where('sku', '==', namaProduk.trim()));
-        const logSnap = await getDocs(logQ);
-        const logEntries = logSnap.docs.map(d => d.data());
-
-        const targetRakLower = rak.trim().toLowerCase();
-        const itemLogs = logEntries.filter(l => 
-          (l.rak || '').toString().trim().toLowerCase() === targetRakLower
-        );
-
-        const masuk = itemLogs
-          .filter(l => l.type === 'IN')
-          .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
-
-        const keluar = itemLogs
-          .filter(l => l.type === 'OUT')
-          .reduce((sum, l) => sum + (Number(l.jumlah) || 0), 0);
-
-        return stokAwal + masuk - keluar;
       } catch (err) {
-        console.error('Error calculating accurate stock in Firebase:', err);
-        return 0;
+        console.warn('Firebase calculateAccurateStock error, falling back to Supabase:', err);
       }
     }
+
+    return await calculateAccurateStock(namaProduk, rak);
   },
 
   async fetchActiveRacks(mode: DatabaseReadMode = 'supabase') {
-    if (mode === 'supabase') {
+    if (mode === 'firebase') {
+      try {
+        const colRef = collection(db, 'rack_locations');
+        const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      } catch (err) {
+        console.warn('Firebase fetchActiveRacks failed, falling back to Supabase:', err);
+      }
+    }
+
+    try {
       const { data, error } = await supabase
         .from('rack_locations')
         .select('id, nama, tampil_di_menu, status, auto_fill_scanner')
@@ -523,16 +547,27 @@ export const DatabaseService = {
         .order('nama', { ascending: true });
       if (error) throw error;
       return data || [];
-    } else {
-      const colRef = collection(db, 'rack_locations');
-      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error('Supabase fetchActiveRacks error:', err);
+      return [];
     }
   },
 
   async fetchActiveWarehouses(mode: DatabaseReadMode = 'supabase') {
-    if (mode === 'supabase') {
+    if (mode === 'firebase') {
+      try {
+        const colRef = collection(db, 'warehouses');
+        const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      } catch (err) {
+        console.warn('Firebase fetchActiveWarehouses failed, falling back to Supabase:', err);
+      }
+    }
+
+    try {
       const { data, error } = await supabase
         .from('warehouses')
         .select('id, nama, tampil_di_menu, status')
@@ -540,11 +575,9 @@ export const DatabaseService = {
         .order('nama', { ascending: true });
       if (error) throw error;
       return data || [];
-    } else {
-      const colRef = collection(db, 'warehouses');
-      const q = firestoreQuery(colRef, where('status', '==', 'Aktif'));
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error('Supabase fetchActiveWarehouses error:', err);
+      return [];
     }
   },
 

@@ -23,6 +23,28 @@ const WAREHOUSES_CACHE_KEY = 'input_barang_keluar_warehouses_cache';
 const RACKS_CACHE_KEY = 'input_barang_keluar_racks_cache';
 const CACHE_TIMESTAMP_KEY = 'input_barang_keluar_cache_timestamp';
 const SESSION_ID_KEY = 'input_barang_keluar_session_id';
+
+// Load dropdown data from localStorage
+const loadDropdownCache = (key: string): string[] => {
+    try {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+    } catch (error) {
+        console.error('Error loading dropdown cache:', error);
+    }
+    return [];
+};
+
+// Save dropdown data to localStorage
+const saveDropdownCache = (key: string, data: string[]) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+        console.error('Error saving dropdown cache:', error);
+    }
+};
 // Cache duration is now effectively ignored
 
 // Generate or retrieve a stable session ID for this device+browser
@@ -212,14 +234,6 @@ const saveToStorage = (data: TransactionRow[]) => {
     }
 };
 
-const saveDropdownCache = (key: string, data: string[]) => {
-    try {
-        localStorage.setItem(key, JSON.stringify(data));
-        localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
-    } catch (error) {
-        console.error('Error saving dropdown cache:', error);
-    }
-};
 export function InputBarangKeluar() {
     const { readMode, writeMode } = useDatabaseConfig();
     const { userEmail, userDetails, isGuest, loading } = useAuth();
@@ -1003,11 +1017,15 @@ export function InputBarangKeluar() {
     const syncDropdownData = async () => {
         try {
             setDropdownLoading(true);
-            const [productsData, warehousesData, racksData] = await Promise.all([
+            const [productsResult, warehousesResult, racksResult] = await Promise.allSettled([
                 DatabaseService.fetchActiveProducts(readMode),
                 DatabaseService.fetchActiveWarehouses(readMode),
                 DatabaseService.fetchActiveRacks(readMode)
             ]);
+
+            const productsData = productsResult.status === 'fulfilled' ? productsResult.value : [];
+            const warehousesData = warehousesResult.status === 'fulfilled' ? warehousesResult.value : [];
+            const racksData = racksResult.status === 'fulfilled' ? racksResult.value : [];
 
             const fetchedProducts = (productsData || []).map((item: any) => item.nama || item.sku_code).filter(Boolean);
             const uniqueProducts = [...new Set(fetchedProducts)].sort();
@@ -1024,12 +1042,18 @@ export function InputBarangKeluar() {
             });
             const rackNames = filteredRacks.map((item: any) => item.nama).filter((name: any) => name && name.trim() !== '');
 
-            setValidProducts(uniqueProducts);
-            setValidWarehouses(warehouseNames);
-            setValidRacks(rackNames);
-            saveDropdownCache(PRODUCTS_CACHE_KEY, uniqueProducts);
-            saveDropdownCache(WAREHOUSES_CACHE_KEY, warehouseNames);
-            saveDropdownCache(RACKS_CACHE_KEY, rackNames);
+            if (uniqueProducts.length > 0) {
+                setValidProducts(uniqueProducts);
+                saveDropdownCache(PRODUCTS_CACHE_KEY, uniqueProducts);
+            }
+            if (warehouseNames.length > 0) {
+                setValidWarehouses(warehouseNames);
+                saveDropdownCache(WAREHOUSES_CACHE_KEY, warehouseNames);
+            }
+            if (rackNames.length > 0) {
+                setValidRacks(rackNames);
+                saveDropdownCache(RACKS_CACHE_KEY, rackNames);
+            }
 
             console.log("🔄 Fetching fresh stock data and logs from database...");
             const stockResult = await DatabaseService.fetchAllStockItems(readMode);
