@@ -907,7 +907,45 @@ export function InputBarangKeluar() {
                 isUpdating = true;
                 try {
                     const stockResult = await DatabaseService.fetchAllStockItems(readMode);
-                    const freshStock = stockResult.data || [];
+                    const rawStock = stockResult.data || [];
+
+                    let logEntries: any[] = [];
+                    try {
+                        if (readMode === 'supabase') {
+                            const { data: logs } = await supabase.from('database_log').select('sku, rak, type, jumlah');
+                            logEntries = logs || [];
+                        }
+                    } catch (err) {
+                        console.warn('Error fetching logs for realtime stock calculation:', err);
+                    }
+
+                    const logMap = new Map<string, { masuk: number; keluar: number }>();
+                    logEntries.forEach((log: any) => {
+                        const key = `${(log.sku || '').toLowerCase().trim()}|${(log.rak || '').toLowerCase().trim()}`;
+                        if (!logMap.has(key)) {
+                            logMap.set(key, { masuk: 0, keluar: 0 });
+                        }
+                        const agg = logMap.get(key)!;
+                        const qty = Number(log.jumlah) || 0;
+                        if (log.type === 'IN') agg.masuk += qty;
+                        if (log.type === 'OUT') agg.keluar += qty;
+                    });
+
+                    const freshStock = rawStock.map((item: any) => {
+                        const key = `${(item.nama_produk || '').toLowerCase().trim()}|${(item.rak || '').toLowerCase().trim()}`;
+                        const logAgg = logMap.get(key) || { masuk: 0, keluar: 0 };
+                        const stokAwal = Number(item.stok_awal) || 0;
+                        const accurateTersedia = stokAwal + logAgg.masuk - logAgg.keluar;
+
+                        return {
+                            ...item,
+                            stok_awal: stokAwal,
+                            masuk: logAgg.masuk,
+                            keluar: logAgg.keluar,
+                            tersedia: accurateTersedia
+                        };
+                    });
+
                     setStockItems(freshStock);
 
                     const stockMap = new Map<string, number>();
@@ -987,21 +1025,61 @@ export function InputBarangKeluar() {
             saveDropdownCache(WAREHOUSES_CACHE_KEY, warehouseNames);
             saveDropdownCache(RACKS_CACHE_KEY, rackNames);
 
-            console.log("🔄 Fetching fresh stock data from database...");
+            console.log("🔄 Fetching fresh stock data and logs from database...");
             const stockResult = await DatabaseService.fetchAllStockItems(readMode);
-            const newStockItems = stockResult.data || [];
-            setStockItems(newStockItems);
+            const rawStockItems = stockResult.data || [];
+
+            // Fetch database_logs to compute accurate real-time stock
+            let logEntries: any[] = [];
+            try {
+                if (readMode === 'supabase') {
+                    const { data: logs } = await supabase.from('database_log').select('sku, rak, type, jumlah');
+                    logEntries = logs || [];
+                }
+            } catch (err) {
+                console.warn('Error fetching logs for accurate stock calculation:', err);
+            }
+
+            const logMap = new Map<string, { masuk: number; keluar: number }>();
+            logEntries.forEach((log: any) => {
+                const key = `${(log.sku || '').toLowerCase().trim()}|${(log.rak || '').toLowerCase().trim()}`;
+                if (!logMap.has(key)) {
+                    logMap.set(key, { masuk: 0, keluar: 0 });
+                }
+                const agg = logMap.get(key)!;
+                const qty = Number(log.jumlah) || 0;
+                if (log.type === 'IN') agg.masuk += qty;
+                if (log.type === 'OUT') agg.keluar += qty;
+            });
+
+            // Map each stock item with accurate calculation: (stok_awal || 0) + log_masuk - log_keluar
+            const accurateStockItems = rawStockItems.map((item: any) => {
+                const key = `${(item.nama_produk || '').toLowerCase().trim()}|${(item.rak || '').toLowerCase().trim()}`;
+                const logAgg = logMap.get(key) || { masuk: 0, keluar: 0 };
+                const stokAwal = Number(item.stok_awal) || 0;
+                const accurateTersedia = stokAwal + logAgg.masuk - logAgg.keluar;
+
+                return {
+                    ...item,
+                    stok_awal: stokAwal,
+                    masuk: logAgg.masuk,
+                    keluar: logAgg.keluar,
+                    tersedia: accurateTersedia
+                };
+            });
+
+            setStockItems(accurateStockItems);
 
             // Create a Map for O(1) lookup
             const stockMap = new Map<string, number>();
-            newStockItems.forEach(item => {
+            accurateStockItems.forEach(item => {
                 if (item.nama_produk && item.rak) {
                     const key = `${item.nama_produk.toLowerCase().trim()}|${item.rak.toLowerCase().trim()}`;
                     stockMap.set(key, Number(item.tersedia) || 0);
                 }
             });
 
-            console.log("✅ Stock data refreshed, force updating all rows...");
+            console.log("✅ Stock data refreshed with accurate log parity, updating rows...");
             setRows(prevRows => {
                 return prevRows.map(row => {
                     const hasBoth = row.nama_produk && row.rak;
@@ -2699,6 +2777,32 @@ export function InputBarangKeluar() {
         }, 100);
     };
 
+    // --- SET ALL UTAMA FUNCTION ---
+    const handleSetAllUtama = async () => {
+        if (rows.length === 0) {
+            showToast('Tidak ada baris data.', 'warning');
+            return;
+        }
+
+        const updatedRows = await Promise.all(rows.map(async (row) => {
+            const updated = { ...row, rak: 'UTAMA', sub_rak: 'UTAMA' };
+            if (updated.nama_produk) {
+                const availableStock = await calculateAvailableStock(updated.nama_produk, 'UTAMA');
+                updated.stok_tersedia = availableStock;
+                updated.total_stok = calculateTotalStock(availableStock, updated.jumlah);
+            }
+            if (updated.validationErrors) {
+                const filteredErrors = updated.validationErrors.filter(err => !err.toLowerCase().includes('rak'));
+                updated.validationErrors = filteredErrors.length > 0 ? filteredErrors : undefined;
+            }
+            return updated;
+        }));
+
+        setRows(updatedRows);
+        saveToStorage(updatedRows);
+        showToast('Semua baris input berhasil di-set ke rak "UTAMA"!', 'success');
+    };
+
     return (
         <>
             <Toast
@@ -2753,7 +2857,16 @@ export function InputBarangKeluar() {
                             </div>
                         </div>
 
-                        <div className="lg:hidden w-full flex justify-end items-center gap-2">
+                        <div className="lg:hidden w-full flex flex-wrap justify-end items-center gap-2">
+                            <Button
+                                onClick={handleSetAllUtama}
+                                className="h-10 px-3.5 bg-amber-400 hover:bg-amber-500 text-slate-900 font-black rounded-xl transition-all active:scale-95 flex items-center gap-1.5 shadow-md border-0"
+                                title="Set seluruh baris input ke rak UTAMA"
+                            >
+                                <Layers className="h-4 w-4" />
+                                <span className="text-[11px] uppercase font-black">SET UTAMA</span>
+                            </Button>
+
                             <Button
                                 onClick={handleClearAll}
                                 className="h-10 px-4 bg-rose-500/80 hover:bg-rose-600 text-white font-black rounded-xl transition-all active:scale-95 flex items-center gap-2 border border-rose-400/20 backdrop-blur-md shadow-lg"
@@ -2766,6 +2879,15 @@ export function InputBarangKeluar() {
 
                         {/* Desktop Action Buttons */}
                         <div className="hidden lg:flex flex-wrap justify-end items-center gap-2">
+                            <Button
+                                onClick={handleSetAllUtama}
+                                className="h-11 px-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 font-black rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg border-0"
+                                title="Set seluruh baris input ke rak UTAMA"
+                            >
+                                <Layers className="h-4 w-4 text-slate-900" />
+                                <span className="text-[11px] uppercase tracking-wider whitespace-nowrap">SET UTAMA</span>
+                            </Button>
+
                             <Button
                                 onClick={() => setIsBulkModalOpen(true)}
                                 className="h-11 px-4 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 font-bold shadow-sm"
