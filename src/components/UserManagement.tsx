@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/AuthContext';
-import { Users, Mail, Clock, RefreshCw, Search, Shield, Settings } from 'lucide-react';
+import { Users, Mail, Clock, RefreshCw, Search, Shield, Settings, Trash2 } from 'lucide-react';
 import { RolePermissionsModal } from './RolePermissionsModal';
 
 interface AppUser {
@@ -17,8 +17,10 @@ interface AppUser {
 }
 
 export function UserManagement() {
-    const { userEmail: currentUserEmail } = useAuth();
+    const { userEmail: currentUserEmail, userRole } = useAuth();
+    const isDeveloper = userRole === 'developer';
     const [users, setUsers] = useState<AppUser[]>([]);
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'Semua' | 'Aktif' | 'Blokir'>('Semua');
@@ -42,7 +44,10 @@ export function UserManagement() {
                     throw error;
                 }
             } else {
-                setUsers(data || []);
+                const validUsers = (data || []).filter((u: AppUser) => 
+                    !u.allowed_menus?.includes('is_deleted') && !u.email?.startsWith('deleted_')
+                );
+                setUsers(validUsers);
             }
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -55,7 +60,15 @@ export function UserManagement() {
         fetchUsers();
     }, []);
 
-    const filteredUsers = users.filter(u => {
+    // Filter out developer accounts for non-developer users
+    const visibleUsers = users.filter(u => {
+        if (!isDeveloper && (u.role === 'developer' || u.email === 'devmode' || u.full_name?.toLowerCase().includes('dev mode'))) {
+            return false;
+        }
+        return true;
+    });
+
+    const filteredUsers = visibleUsers.filter(u => {
         const matchesSearch = u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               u.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
                               
@@ -68,6 +81,81 @@ export function UserManagement() {
         
         return matchesSearch && matchesStatus;
     });
+
+    // Eligible users for selection (excluding current user and dev accounts if non-dev)
+    const selectableUsers = filteredUsers.filter(u => {
+        if (u.email === currentUserEmail) return false;
+        if (!isDeveloper && (u.role === 'developer' || u.email === 'devmode')) return false;
+        return true;
+    });
+
+    const isAllSelected = selectableUsers.length > 0 && selectableUsers.every(u => selectedUserIds.includes(u.id));
+
+    const handleToggleSelectAll = () => {
+        if (isAllSelected) {
+            setSelectedUserIds([]);
+        } else {
+            setSelectedUserIds(selectableUsers.map(u => u.id));
+        }
+    };
+
+    const handleToggleSelectUser = (userId: string) => {
+        setSelectedUserIds(prev => 
+            prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+        );
+    };
+
+    const handleBulkDelete = async () => {
+        const idsToDelete = selectedUserIds.filter(id => {
+            const u = users.find(user => user.id === id);
+            if (!u) return false;
+            if (u.email === currentUserEmail) return false;
+            if (!isDeveloper && (u.role === 'developer' || u.email === 'devmode')) return false;
+            return true;
+        });
+
+        if (idsToDelete.length === 0) {
+            alert('Tidak ada user valid yang dapat dihapus.');
+            return;
+        }
+
+        if (!confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS ${idsToDelete.length} user yang dipilih? Tindakan ini tidak dapat dibatalkan.`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            // 1. Attempt hard delete with select to check if RLS allowed it
+            const { data: delResult } = await supabase
+                .from('app_users')
+                .delete()
+                .in('id', idsToDelete)
+                .select();
+
+            // 2. If hard delete was blocked by RLS (0 rows deleted), apply soft-delete update
+            if (!delResult || delResult.length === 0) {
+                for (const id of idsToDelete) {
+                    const u = users.find(user => user.id === id);
+                    const currentMenus = u?.allowed_menus || [];
+                    await supabase
+                        .from('app_users')
+                        .update({
+                            is_blocked: true,
+                            allowed_menus: [...new Set([...currentMenus, 'is_deleted'])]
+                        })
+                        .eq('id', id);
+                }
+            }
+
+            setSelectedUserIds([]);
+            await fetchUsers();
+            alert(`Berhasil menghapus ${idsToDelete.length} user.`);
+        } catch (err: any) {
+            alert('Gagal menghapus user: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const formatDate = (dateStr: string) => {
         if (!dateStr) return '-';
@@ -84,6 +172,12 @@ export function UserManagement() {
     const handleToggleBlock = async (userId: string, currentStatus: boolean, userEmail: string) => {
         if (userEmail === currentUserEmail) {
             alert('Anda tidak bisa memblokir akun Anda sendiri.');
+            return;
+        }
+
+        const targetUser = users.find(u => u.id === userId || u.email === userEmail);
+        if (!isDeveloper && targetUser && (targetUser.role === 'developer' || targetUser.email === 'devmode')) {
+            alert('Akses Ditolak: Anda tidak dapat memblokir akun Developer.');
             return;
         }
         
@@ -104,6 +198,12 @@ export function UserManagement() {
     };
 
     const handleRoleChange = async (userId: string, newRole: string) => {
+        const targetUser = users.find(u => u.id === userId);
+        if (!isDeveloper && (targetUser?.role === 'developer' || newRole === 'developer')) {
+            alert('Akses Ditolak: Anda tidak memiliki izin untuk mengelola role Developer.');
+            return;
+        }
+
         try {
             const { error } = await supabase
                 .from('app_users')
@@ -123,22 +223,52 @@ export function UserManagement() {
             return;
         }
 
+        const targetUser = users.find(u => u.id === userId || u.email === targetEmail);
+        if (!isDeveloper && targetUser && (targetUser.role === 'developer' || targetUser.email === 'devmode')) {
+            alert('Akses Ditolak: Anda tidak dapat menghapus akun Developer.');
+            return;
+        }
+
         if (!confirm(`PERINGATAN: Apakah Anda yakin ingin MENGHAPUS profil user ini (${targetEmail})? Data riwayat user ini mungkin akan hilang.`)) return;
 
         try {
-            const { error } = await supabase
+            setLoading(true);
+            // 1. Attempt hard delete with select
+            const { data: delResult } = await supabase
                 .from('app_users')
                 .delete()
-                .eq('id', userId);
+                .eq('id', userId)
+                .select();
 
-            if (error) throw error;
-            fetchUsers(); // Refresh
+            // 2. If hard delete was blocked by RLS (0 rows deleted), apply soft-delete update
+            if (!delResult || delResult.length === 0) {
+                const currentMenus = targetUser?.allowed_menus || [];
+                await supabase
+                    .from('app_users')
+                    .update({
+                        is_blocked: true,
+                        allowed_menus: [...new Set([...currentMenus, 'is_deleted'])]
+                    })
+                    .eq('id', userId);
+            }
+
+            setSelectedUserIds(prev => prev.filter(id => id !== userId));
+            await fetchUsers(); // Refresh
+            alert('User berhasil dihapus!');
         } catch (err: any) {
             alert('Gagal menghapus user: ' + err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleToggleBypassPin = async (userId: string, isChecked: boolean, currentMenus: string[] = []) => {
+        const targetUser = users.find(u => u.id === userId);
+        if (!isDeveloper && targetUser && (targetUser.role === 'developer' || targetUser.email === 'devmode')) {
+            alert('Akses Ditolak: Anda tidak dapat mengubah pengaturan akun Developer.');
+            return;
+        }
+
         try {
             const newMenus = isChecked 
                 ? [...currentMenus, 'bypass_pin_log']
@@ -216,7 +346,7 @@ export function UserManagement() {
                             <Users className="h-6 w-6 text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black text-gray-900">{users.length}</p>
+                            <p className="text-2xl font-black text-gray-900">{visibleUsers.length}</p>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Users</p>
                         </div>
                     </div>
@@ -225,7 +355,7 @@ export function UserManagement() {
                             <Shield className="h-6 w-6 text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-black text-gray-900">{users.filter(u => {
+                            <p className="text-2xl font-black text-gray-900">{visibleUsers.filter(u => {
                                 const lastLogin = new Date(u.last_login);
                                 const now = new Date();
                                 return (now.getTime() - lastLogin.getTime()) < 24 * 60 * 60 * 1000;
@@ -294,12 +424,52 @@ export function UserManagement() {
                             </div>
                         </div>
 
+                        {/* Bulk Action Bar */}
+                        {selectedUserIds.length > 0 && (
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-rose-50/90 border border-rose-200/80 backdrop-blur-md rounded-2xl px-6 py-3.5 mb-6 animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg">
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center font-black text-sm shadow-md">
+                                        {selectedUserIds.length}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-rose-950">{selectedUserIds.length} User Terpilih</p>
+                                        <p className="text-xs font-medium text-rose-700">Tindakan massal akan diterapkan pada seluruh akun yang dicentang.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                                    <button
+                                        onClick={() => setSelectedUserIds([])}
+                                        className="h-10 px-4 bg-white hover:bg-rose-100/50 text-gray-700 font-bold rounded-xl text-xs border border-rose-200 shadow-sm transition-all active:scale-95"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="h-10 px-5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs shadow-md shadow-rose-600/30 transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Hapus Terpilih ({selectedUserIds.length})
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Users Table */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead className="bg-gray-50 border-b border-gray-100">
                                         <tr>
+                                            <th className="w-12 px-4 py-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isAllSelected}
+                                                    onChange={handleToggleSelectAll}
+                                                    disabled={selectableUsers.length === 0}
+                                                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Pilih Semua"
+                                                />
+                                            </th>
                                             <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-wider">User</th>
                                             <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-wider">Email & Role</th>
                                             <th className="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-wider">Login Terakhir</th>
@@ -311,15 +481,15 @@ export function UserManagement() {
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
                                         {loading ? (
-                                            <tr>
-                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                             <tr>
+                                                <td colSpan={8} className="px-6 py-12 text-center">
                                                     <RefreshCw className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-3" />
                                                     <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Memuat data...</p>
                                                 </td>
                                             </tr>
                                         ) : filteredUsers.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                                <td colSpan={8} className="px-6 py-12 text-center">
                                                     <Users className="h-8 w-8 text-gray-300 mx-auto mb-3" />
                                                     <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Tidak ada user ditemukan</p>
                                                 </td>
@@ -328,8 +498,20 @@ export function UserManagement() {
                                             filteredUsers.map((user) => {
                                                 const isActive = (new Date().getTime() - new Date(user.last_login).getTime()) < 24 * 60 * 60 * 1000;
                                                 const isCurrentUser = user.email === currentUserEmail;
+                                                const isUserSelected = selectedUserIds.includes(user.id);
+                                                const isSelectDisabled = isCurrentUser || (!isDeveloper && user.role === 'developer');
+
                                                 return (
-                                                    <tr key={user.id} className={`hover:bg-blue-50/50 transition-colors ${isCurrentUser ? 'bg-blue-50/30' : ''}`}>
+                                                    <tr key={user.id} className={`hover:bg-blue-50/50 transition-colors ${isUserSelected ? 'bg-rose-50/40' : isCurrentUser ? 'bg-blue-50/30' : ''}`}>
+                                                        <td className="w-12 px-4 py-4 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isUserSelected}
+                                                                onChange={() => handleToggleSelectUser(user.id)}
+                                                                disabled={isSelectDisabled}
+                                                                className={`w-4 h-4 text-rose-600 rounded border-gray-300 focus:ring-rose-500 ${isSelectDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                            />
+                                                        </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
                                                                 {user.avatar_url ? (
@@ -358,6 +540,7 @@ export function UserManagement() {
                                                                 <select 
                                                                     value={user.role || 'staf_gudang'}
                                                                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                                                    disabled={!isDeveloper && user.role === 'developer'}
                                                                     className={`text-xs font-bold px-2 py-1 rounded-md outline-none border cursor-pointer w-max ${
                                                                         user.role === 'developer' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                                                                         user.role === 'staf_admin' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -366,7 +549,7 @@ export function UserManagement() {
                                                                 >
                                                                     <option value="staf_gudang">Staf Gudang</option>
                                                                     <option value="staf_admin">Staf Admin</option>
-                                                                    <option value="developer">Developer</option>
+                                                                    {isDeveloper && <option value="developer">Developer</option>}
                                                                 </select>
                                                             </div>
                                                         </td>
@@ -380,9 +563,10 @@ export function UserManagement() {
                                                             <span className="text-sm text-gray-500 font-medium">{formatDate(user.created_at)}</span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <label className="flex items-center justify-center gap-2 cursor-pointer">
+                                                            <label className={`flex items-center justify-center gap-2 ${!isDeveloper && user.role === 'developer' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                                                                 <input
                                                                     type="checkbox"
+                                                                    disabled={!isDeveloper && user.role === 'developer'}
                                                                     checked={user.allowed_menus?.includes('bypass_pin_log') || false}
                                                                     onChange={(e) => handleToggleBypassPin(user.id, e.target.checked, user.allowed_menus)}
                                                                     className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
@@ -412,15 +596,15 @@ export function UserManagement() {
                                                             <div className="flex items-center justify-end gap-2">
                                                                 <button
                                                                     onClick={() => handleToggleBlock(user.id, user.is_blocked || false, user.email)}
-                                                                    disabled={isCurrentUser}
-                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrentUser ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400' : user.is_blocked ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}
+                                                                    disabled={isCurrentUser || (!isDeveloper && user.role === 'developer')}
+                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrentUser || (!isDeveloper && user.role === 'developer') ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400' : user.is_blocked ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}
                                                                 >
                                                                     {user.is_blocked ? 'Buka Blokir' : 'Blokir'}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteUser(user.id, user.email)}
-                                                                    disabled={isCurrentUser}
-                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrentUser ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200'}`}
+                                                                    disabled={isCurrentUser || (!isDeveloper && user.role === 'developer')}
+                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrentUser || (!isDeveloper && user.role === 'developer') ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200'}`}
                                                                 >
                                                                     Hapus
                                                                 </button>

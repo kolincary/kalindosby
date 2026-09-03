@@ -168,11 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Check if user already exists by email
             const { data: existing } = await supabase
                 .from('app_users')
-                .select('id, is_blocked')
+                .select('id, is_blocked, allowed_menus')
                 .eq('email', user.email)
                 .maybeSingle();
 
-            if (existing?.is_blocked) {
+            const isDeleted = existing?.allowed_menus?.includes('is_deleted');
+
+            if (existing?.is_blocked && !isDeleted) {
                 alert('Akses Ditolak: Akun Anda telah diblokir dari sistem.');
                 await supabase.auth.signOut();
                 localStorage.clear();
@@ -183,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (existing) {
                 // User exists — update by email (handles project migration where id changed)
+                const cleanAllowedMenus = (existing.allowed_menus || []).filter((m: string) => m !== 'is_deleted');
                 const { error } = await supabase
                     .from('app_users')
                     .update({
@@ -190,6 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         full_name: userData.full_name,
                         avatar_url: userData.avatar_url,
                         last_login: userData.last_login,
+                        is_blocked: isDeleted ? false : existing.is_blocked,
+                        allowed_menus: cleanAllowedMenus
                     })
                     .eq('email', user.email);
 

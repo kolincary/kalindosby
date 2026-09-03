@@ -36,6 +36,7 @@ export const navigationItems = [
   { name: 'Riwayat Barang', href: '/riwayat', icon: History },
   { name: 'Update Lokasi', href: '/update-lokasi', icon: MapPin },
   { name: 'Prioritas Rak', href: '/rack-priority-settings', icon: SlidersHorizontal },
+  { name: 'User Management', href: '/user-management', icon: Users },
   { name: 'Database Log', href: '/database-log', icon: Database },
 ];
 
@@ -48,7 +49,6 @@ export const devNavigationItems = [
   { name: 'Dev: Update Rak Khusus', href: '/dev-rack-update', icon: Settings },
   { name: 'DevMode Settings', href: '/dev-settings', icon: Settings },
   { name: 'Kelola Notifikasi Update', href: '/notification-manager', icon: Bell },
-  { name: 'User Management', href: '/user-management', icon: Users },
   { name: 'Pengaturan Quest Harian', href: '/daily-quest-manager', icon: ShieldAlert },
   { name: 'Pengaturan Database', href: '/database-settings', icon: DatabaseIcon },
 ];
