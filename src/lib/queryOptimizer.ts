@@ -170,36 +170,13 @@ export const queryOptimizer = {
         const { data: stockItems } = await fetchAllStockItems();
         if (!stockItems || stockItems.length === 0) return { total_products: 0, empty_stock_items: 0, low_stock_items: 0 };
 
-        const { data: logData, error: logError } = await supabase
-          .from('database_log')
-          .select('sku, rak, type, jumlah')
-          .in('type', ['IN', 'OUT']);
-
-        if (logError) {
-          console.error('Error fetching logs for stats:', logError);
-        }
-
-        const logs = logData || [];
-        const logMap = new Map<string, { masuk: number, keluar: number }>();
-
-        logs.forEach(log => {
-          const key = `${log.sku}|${log.rak}`;
-          if (!logMap.has(key)) logMap.set(key, { masuk: 0, keluar: 0 });
-          const stat = logMap.get(key)!;
-          if (log.type === 'IN') stat.masuk += (log.jumlah || 0);
-          if (log.type === 'OUT') stat.keluar += (log.jumlah || 0);
-        });
-
         const uniqueProducts = new Set<string>();
         let emptyCount = 0;
         let lowCount = 0;
 
         for (const item of stockItems) {
           uniqueProducts.add(item.nama_produk);
-          const key = `${item.nama_produk}|${item.rak}`;
-          const stat = logMap.get(key) || { masuk: 0, keluar: 0 };
-
-          const tersedia = (item.stok_awal || 0) + stat.masuk - stat.keluar;
+          const tersedia = Number(item.tersedia) || 0;
 
           if (tersedia === 0) emptyCount++;
           else if (tersedia > 0 && tersedia < 10) lowCount++;

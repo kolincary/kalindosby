@@ -927,42 +927,13 @@ export function InputBarangKeluar() {
                     const stockResult = await DatabaseService.fetchAllStockItems(readMode);
                     const rawStock = stockResult.data || [];
 
-                    let logEntries: any[] = [];
-                    try {
-                        if (readMode === 'supabase') {
-                            const { data: logs } = await supabase.from('database_log').select('sku, rak, type, jumlah');
-                            logEntries = logs || [];
-                        }
-                    } catch (err) {
-                        console.warn('Error fetching logs for realtime stock calculation:', err);
-                    }
-
-                    const logMap = new Map<string, { masuk: number; keluar: number }>();
-                    logEntries.forEach((log: any) => {
-                        const key = `${(log.sku || '').toLowerCase().trim()}|${(log.rak || '').toLowerCase().trim()}`;
-                        if (!logMap.has(key)) {
-                            logMap.set(key, { masuk: 0, keluar: 0 });
-                        }
-                        const agg = logMap.get(key)!;
-                        const qty = Number(log.jumlah) || 0;
-                        if (log.type === 'IN') agg.masuk += qty;
-                        if (log.type === 'OUT') agg.keluar += qty;
-                    });
-
-                    const freshStock = rawStock.map((item: any) => {
-                        const key = `${(item.nama_produk || '').toLowerCase().trim()}|${(item.rak || '').toLowerCase().trim()}`;
-                        const logAgg = logMap.get(key) || { masuk: 0, keluar: 0 };
-                        const stokAwal = Number(item.stok_awal) || 0;
-                        const accurateTersedia = stokAwal + logAgg.masuk - logAgg.keluar;
-
-                        return {
-                            ...item,
-                            stok_awal: stokAwal,
-                            masuk: logAgg.masuk,
-                            keluar: logAgg.keluar,
-                            tersedia: accurateTersedia
-                        };
-                    });
+                    const freshStock = rawStock.map((item: any) => ({
+                        ...item,
+                        stok_awal: Number(item.stok_awal) || 0,
+                        masuk: Number(item.masuk) || 0,
+                        keluar: Number(item.keluar) || 0,
+                        tersedia: Number(item.tersedia) || 0
+                    }));
 
                     setStockItems(freshStock);
 
@@ -978,7 +949,7 @@ export function InputBarangKeluar() {
                         return prevRows.map(row => {
                             const hasBoth = row.nama_produk && row.rak;
                             const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
-                            const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
+                            const stokTersedia = hasBoth ? (stockMap.get(key) ?? 0) : 0;
                             return {
                                 ...row,
                                 stok_tersedia: stokTersedia,
@@ -987,6 +958,7 @@ export function InputBarangKeluar() {
                         });
                     });
 
+                    console.log('✅ All rows stock updated via realtime with accurate database values');
                     isUpdating = false;
                 } catch (err) {
                     console.error('❌ Error updating stock:', err);
@@ -1055,48 +1027,17 @@ export function InputBarangKeluar() {
                 saveDropdownCache(RACKS_CACHE_KEY, rackNames);
             }
 
-            console.log("🔄 Fetching fresh stock data and logs from database...");
+            console.log("🔄 Fetching fresh stock data from database...");
             const stockResult = await DatabaseService.fetchAllStockItems(readMode);
             const rawStockItems = stockResult.data || [];
 
-            // Fetch database_logs to compute accurate real-time stock
-            let logEntries: any[] = [];
-            try {
-                if (readMode === 'supabase') {
-                    const { data: logs } = await supabase.from('database_log').select('sku, rak, type, jumlah');
-                    logEntries = logs || [];
-                }
-            } catch (err) {
-                console.warn('Error fetching logs for accurate stock calculation:', err);
-            }
-
-            const logMap = new Map<string, { masuk: number; keluar: number }>();
-            logEntries.forEach((log: any) => {
-                const key = `${(log.sku || '').toLowerCase().trim()}|${(log.rak || '').toLowerCase().trim()}`;
-                if (!logMap.has(key)) {
-                    logMap.set(key, { masuk: 0, keluar: 0 });
-                }
-                const agg = logMap.get(key)!;
-                const qty = Number(log.jumlah) || 0;
-                if (log.type === 'IN') agg.masuk += qty;
-                if (log.type === 'OUT') agg.keluar += qty;
-            });
-
-            // Map each stock item with accurate calculation: (stok_awal || 0) + log_masuk - log_keluar
-            const accurateStockItems = rawStockItems.map((item: any) => {
-                const key = `${(item.nama_produk || '').toLowerCase().trim()}|${(item.rak || '').toLowerCase().trim()}`;
-                const logAgg = logMap.get(key) || { masuk: 0, keluar: 0 };
-                const stokAwal = Number(item.stok_awal) || 0;
-                const accurateTersedia = stokAwal + logAgg.masuk - logAgg.keluar;
-
-                return {
-                    ...item,
-                    stok_awal: stokAwal,
-                    masuk: logAgg.masuk,
-                    keluar: logAgg.keluar,
-                    tersedia: accurateTersedia
-                };
-            });
+            const accurateStockItems = rawStockItems.map((item: any) => ({
+                ...item,
+                stok_awal: Number(item.stok_awal) || 0,
+                masuk: Number(item.masuk) || 0,
+                keluar: Number(item.keluar) || 0,
+                tersedia: Number(item.tersedia) || 0
+            }));
 
             setStockItems(accurateStockItems);
 
@@ -1109,12 +1050,12 @@ export function InputBarangKeluar() {
                 }
             });
 
-            console.log("✅ Stock data refreshed with accurate log parity, updating rows...");
+            console.log("✅ Stock data refreshed with accurate database values, updating rows...");
             setRows(prevRows => {
                 return prevRows.map(row => {
                     const hasBoth = row.nama_produk && row.rak;
                     const key = `${(row.nama_produk || '').toLowerCase().trim()}|${(row.rak || '').toLowerCase().trim()}`;
-                    const stokTersedia = hasBoth ? (stockMap.get(key) || 0) : 0;
+                    const stokTersedia = hasBoth ? (stockMap.get(key) ?? 0) : 0;
                     return {
                         ...row,
                         stok_tersedia: stokTersedia,
@@ -1356,6 +1297,10 @@ export function InputBarangKeluar() {
                 (s.nama_produk || '').toLowerCase().trim() === produkLower &&
                 isRakAmbiguousMatch(rak, s.rak || '')
             );
+        }
+
+        if (item && item.tersedia !== undefined && item.tersedia !== null) {
+            return Number(item.tersedia) || 0;
         }
 
         const finalNama = item?.nama_produk || namaProduk;
